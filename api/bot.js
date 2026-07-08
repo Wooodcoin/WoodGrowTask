@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 
-// Ініціалізуємо Firebase Admin SDK, якщо він ще не ініціалізований
+// Ініціалізуємо Firebase Admin SDK
 if (!admin.apps.length) {
     try {
         const base64Key = process.env.FIREBASE_SERVICE_ACCOUNT;
@@ -24,7 +24,6 @@ if (!admin.apps.length) {
 const db = admin.database();
 
 export default async function handler(request, response) {
-  // Перевіряємо, що запит прийшов методом POST від Telegram
   if (request.method !== 'POST') {
     return response.status(200).send('Бот працює штатно!');
   }
@@ -32,7 +31,6 @@ export default async function handler(request, response) {
   try {
     const { message } = request.body;
 
-    // Якщо в запиті немає повідомлення, просто ігноруємо
     if (!message || !message.text) {
       return response.status(200).send('OK');
     }
@@ -42,28 +40,36 @@ export default async function handler(request, response) {
     const username = message.from.username || 'Без юзернейму';
     const firstName = message.from.first_name || 'Користувач';
 
-    // Обробка команди /start
     if (text === '/start') {
-      const botToken = process.env.BOT_TOKEN;
+      // Використовуємо ТВОЮ точну змінну з Vercel
+      const botToken = process.env.TELEGRAM_BOT_TOKEN; 
       const webAppUrl = 'https://wood-grow-task.vercel.app/';
 
-      // 1. РЕЄСТРАЦІЯ У FIREBASE (Гілка task_users з маленької літери)
-      const userRef = db.ref(`task_users/${chatId}`);
-      const userSnapshot = await userRef.once('value');
-      const userData = userSnapshot.val();
-
-      // Якщо замовника ще немає в базі — створюємо новий профіль
-      if (!userData) {
-        await userRef.set({
-          username: username,
-          first_name: firstName,
-          balance: 0.00,
-          role: 'advertiser',
-          registered_at: Math.floor(Date.now() / 1000)
-        });
+      if (!botToken) {
+        console.error('Помилка: TELEGRAM_BOT_TOKEN не знайдено в оточенні!');
+        return response.status(200).send('OK');
       }
 
-      // 2. НАДСИЛАННЯ ПОВІДОМЛЕННЯ В TELEGRAM
+      // 1. РЕЄСТРАЦІЯ У FIREBASE (як Супер-Адмін через SDK)
+      try {
+        const userRef = db.ref(`task_users/${chatId}`);
+        const userSnapshot = await userRef.once('value');
+        const userData = userSnapshot.val();
+
+        if (!userData) {
+          await userRef.set({
+            username: username,
+            first_name: firstName,
+            balance: 0.00,
+            role: 'advertiser',
+            registered_at: Math.floor(Date.now() / 1000)
+          });
+        }
+      } catch (dbError) {
+        console.error('Помилка запису в Firebase:', dbError);
+      }
+
+      // 2. НАДСИЛАННЯ ПОВІДОМЛЕННЯ В TELEGRAM (через стандартний HTTPS модуль)
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
       
       const payload = {
@@ -82,7 +88,7 @@ export default async function handler(request, response) {
         }
       };
 
-      // Відправка запиту в Telegram
+      // Використовуємо глобальний fetch для відправки
       await fetch(telegramUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,7 +98,7 @@ export default async function handler(request, response) {
 
     return response.status(200).send('OK');
   } catch (error) {
-    console.error('Помилка у bot handler:', error);
+    console.error('Загальна помилка бота:', error);
     return response.status(200).send('Error');
   }
 }
