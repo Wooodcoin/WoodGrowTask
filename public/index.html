@@ -1,1 +1,71 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WoodGrow TASK</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Налаштування нашого фірмового насиченого бірюзового фону */
+        body {
+            background: linear-gradient(135deg, #092c30 0%, #144d54 100%);
+            color: #ffffff;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 90vh;
+            text-align: center;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Стиль для заголовка у бронзовому кольорі */
+        h1 {
+            color: #cd7f32; /* Бронзовий колір */
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        p {
+            color: #e0f2f1;
+            font-size: 16px;
+            max-width: 280px;
+            line-height: 1.5;
+        }
+
+        /* Тимчасова демонстраційна бронзова кнопка */
+        .btn-bronze {
+            background: linear-gradient(135deg, #a76b29 0%, #cd7f32 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(205, 127, 50, 0.3);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>WoodGrow TASK</h1>
+    <p>Ваш персональний кабінет замовника успішно запущено!</p>
+    
+    <button class="btn-bronze">Бронзова кнопка</button>
+
+    <script>
+        // Повідомляємо Telegram, що додаток готовий до роботи
+        window.Telegram.WebApp.ready();
+        // Розгортаємо Mini App на максимум екранa телефона
+        window.Telegram.WebApp.expand();
+    </script>
+</body>
+</html>
 
