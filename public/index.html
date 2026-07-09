@@ -3,81 +3,652 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WoodGrow TASK</title>
+    <title>WoodGrow TASK - Advertiser Cabinet</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+
     <style>
-        /* Твій новий фірмовий фон Aqua Marine */
+        :root {
+            --bg-main: #061318;
+            --neon-aqua: #00f5d4;
+            --ember-gradient: linear-gradient(135deg, #ff9f1c 0%, #ffbf69 50%, #d4a373 100%);
+            --ember-color: #ff9f1c;
+            --text-dark: #111111;
+            --text-light: #ffffff;
+            --card-bg: rgba(0, 245, 212, 0.08);
+            --border-color: rgba(0, 245, 212, 0.3);
+        }
+
         body {
-            background-color: #2EE8BB;
-            color: #111c1a; /* Темний колір тексту для контрасту на світлому тлі */
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-main);
+            background-image: radial-gradient(circle at 50% 20%, rgba(0, 245, 212, 0.12), transparent 70%);
+            color: var(--text-light);
             margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 90vh;
-            text-align: center;
+            padding: 0;
+            padding-top: 20px;
+            padding-bottom: 90px;
+            box-sizing: border-box;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        /* Головний заголовок */
-        h1 {
-            color: #111c1a;
-            font-size: 32px;
-            font-weight: 800;
-            margin-bottom: 5px;
+        .lang-top-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1.5px solid var(--neon-aqua);
+            color: var(--text-light);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 2800;
+            box-shadow: 0 0 10px rgba(0, 245, 212, 0.2);
+        }
+
+        .container { padding: 15px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 15px rgba(0, 245, 212, 0.1);
+        }
+
+        .balance-title {
+            font-size: 13px;
+            color: var(--neon-aqua);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            font-weight: bold;
         }
 
-        p {
-            color: #1a3a32;
-            font-size: 16px;
-            max-width: 280px;
-            line-height: 1.5;
-            margin-top: 5px;
-            font-weight: 500;
-        }
-
-        /* Яскраві кнопки у стилі Ember */
-        .btn-ember {
-            background: linear-gradient(135deg, #ff9436 0%, #f27c16 100%);
+        .balance-value {
+            font-size: 36px;
+            font-weight: 900;
+            margin: 8px 0;
             color: #ffffff;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            background: var(--ember-gradient);
+            color: var(--text-dark);
             border: none;
-            padding: 15px 35px;
+            border-radius: 14px;
+            padding: 15px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(255, 159, 28, 0.3);
+            text-transform: uppercase;
+        }
+
+        .btn:disabled {
+            background: #222a2e;
+            color: #5c6970;
+            box-shadow: none;
+            border: 1px solid #344247;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            box-sizing: border-box;
+            margin-top: 10px;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: var(--neon-aqua);
+            box-shadow: 0 0 10px rgba(0, 245, 212, 0.3);
+        }
+
+        .nav-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 65px;
+            background: linear-gradient(180deg, #091316 0%, #000000 100%);
+            border-top: 2px solid var(--border-color);
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            z-index: 2000;
+        }
+
+        .nav-item {
+            display: table-cell;
+            text-align: center;
+            vertical-align: middle;
+            color: #5c6970;
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: var(--neon-aqua);
+            text-shadow: 0 0 8px rgba(0, 245, 212, 0.5);
+        }
+
+        .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+
+        #ton-connect-btn { display: flex; justify-content: center; margin: 15px 0; }
+        h3 { color: var(--neon-aqua); margin-top: 0; text-transform: uppercase; font-size: 16px; }
+        
+        .campaign-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        .lang-select-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 10px;
             font-size: 16px;
             font-weight: bold;
-            border-radius: 12px;
-            margin-top: 25px;
-            box-shadow: 0 6px 20px rgba(242, 124, 22, 0.4);
             cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: transform 0.1s ease;
         }
 
-        /* Ефект натискання на кнопку з мобільного */
-        .btn-ember:active {
-            transform: scale(0.96);
-            background: #f27c16;
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-window {
+            background: #081114;
+            border: 2px solid var(--neon-aqua);
+            border-radius: 20px;
+            padding: 25px 20px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-    <h1>WoodGrow TASK</h1>
-    <p>Персональний кабінет успішно запущено!</p>
-    
-    <button class="btn-ember">Ember Кнопка</button>
+    <div class="lang-top-btn" onclick="openLangModal()">🌐</div>
+
+    <div class="container">
+        
+        <div id="tab-campaigns" class="tab-content active">
+            <div class="card">
+                <h3 id="txt-nav-campaigns">Мої кампанії</h3>
+                <p style="color: #8b9e9f; font-size: 13px;" id="txt-campaigns-desc">Тут відображається статус ваших замовлених завдань на підписки/лайки.</p>
+                <div id="campaigns-list">
+                    <p style="color: #5c6970; font-style: italic;" id="txt-no-campaigns">У вас ще немає створених кампаній</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-create" class="tab-content">
+            <div class="card">
+                <div class="balance-title" id="txt-balance-title">Мій Баланс рекламодавця</div>
+                <div class="balance-value"><span id="adv-balance">0.0000</span> USDT</div>
+                <button class="btn" style="background: none; border: 1.5px dashed var(--neon-aqua); color: var(--neon-aqua); box-shadow: none; font-size: 12px; padding: 8px;" onclick="switchTabDirect('deposit')" id="txt-go-deposit">⚡️ ПОПОВНИТИ РАХУНОК</button>
+            </div>
+
+            <div class="card" style="text-align: left;">
+                <h3 style="text-align: center;" id="txt-create-title">Створити нове завдання</h3>
+                <p style="color: #8b9e9f; font-size: 12px; margin: 0 0 10px 0;" id="txt-create-hint">Користувачі основної апки WoodGrow отримають по 0.0005 USDT за виконання.</p>
+                
+                <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua);" id="txt-label-link">Посилання на пост X (Twitter) або Telegram:</label>
+                <input type="url" class="input-field" id="task-url" placeholder="https://t.me/channel/123 або https://x.com/...">
+                
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                        <span id="txt-pkg-size">Обсяг пакету:</span>
+                        <span style="color: var(--neon-aqua); font-weight: bold;">20 виконань (+6 бонус)</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 5px;">
+                        <span id="txt-pkg-cost">Вартість пакету:</span>
+                        <span style="color: #ff9f1c; font-weight: bold;">0.04 USDT</span>
+                    </div>
+                </div>
+
+                <button class="btn" id="btn-submit-task" onclick="submitNewTask()">Запустити кампанію (0.04 USDT)</button>
+            </div>
+        </div>
+
+        <div id="tab-deposit" class="tab-content">
+            <div class="card">
+                <h3 id="txt-deposit-title">Автоматичне поповнення</h3>
+                <p style="color: #8b9e9f; font-size: 13px;" id="txt-deposit-desc">Підключіть свій Web3-гаманець для миттєвого зарахування USDT на ваш баланс.</p>
+                
+                <div id="ton-connect-btn"></div>
+
+                <div style="text-align: left; margin-top: 15px;">
+                    <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua);" id="txt-label-amount">Сума поповнення (USDT):</label>
+                    <input type="number" class="input-field" id="deposit-amount" placeholder="Мінімум 0.60" step="0.1" min="0.6">
+                    <p style="color: #ff4444; font-size: 11px; margin: 4px 0 0 0; display: none;" id="deposit-error-msg">⚠️ Мінімальна сума поповнення: 0.6 USDT</p>
+                </div>
+
+                <button class="btn" id="btn-send-payment" onclick="processWalletPayment()" disabled>Оплатити через гаманець</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal-overlay" id="lang-modal">
+        <div class="modal-window">
+            <h3 style="margin-bottom: 20px;">🌐 Choose Language / Мова</h3>
+            <button class="lang-select-btn" onclick="selectLanguage('uk')"><span>🇺🇦 Українська</span> <span>➔</span></button>
+            <button class="lang-select-btn" onclick="selectLanguage('en')"><span>🇬🇧 English</span> <span>➔</span></button>
+            <button class="lang-select-btn" onclick="selectLanguage('ru')"><span>🇷🇺 Русский</span> <span>➔</span></button>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="switchTab('campaigns', this)" id="nav-campaigns">
+            <span class="nav-icon">📊</span><span id="lbl-nav-camp">Прогрес</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('create', this)" id="nav-create">
+            <span class="nav-icon">➕</span><span id="lbl-nav-create">Замовлення</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('deposit', this)" id="nav-deposit">
+            <span class="nav-icon">💳</span><span id="lbl-nav-dep">Поповнення</span>
+        </div>
+    </div>
 
     <script>
-        // Повідомляємо Telegram, що додаток готовий
-        window.Telegram.WebApp.ready();
-        // Розгортаємо на весь екран смартфона
-        window.Telegram.WebApp.expand();
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let userId = "6043278492"; // Дефолтний ID для тестування
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            userId = tg.initDataUnsafe.user.id.toString();
+        }
+
+        let balance = 0.0000;
+        let currentLang = 'en';
+
+        const translations = {
+            uk: {
+                nav_campaigns: "Мої кампанії",
+                campaigns_desc: "Тут відображається статус ваших замовлених завдань на підписки/лайки.",
+                no_campaigns: "У вас ще немає створених кампаній",
+                balance_title: "Мій Баланс рекламодавця",
+                go_deposit: "⚡️ ПОПОВНИТИ РАХУНОК",
+                create_title: "Створити нове завдання",
+                create_hint: "Користувачі основної апки WoodGrow отримають по 0.0005 USDT за виконання.",
+                label_link: "Посилання на пост X (Twitter) або Telegram:",
+                pkg_size: "Обсяг пакету:",
+                pkg_cost: "Вартість пакету:",
+                btn_submit: "Запустити кампанію (0.04 USDT)",
+                btn_submit_free: "Запустити безкоштовно (0.00 USDT)",
+                deposit_title: "Автоматичне поповнення",
+                deposit_desc: "Підключіть свій Web3-гаманець для миттєвого зарахування USDT на ваш баланс.",
+                label_amount: "Сума поповнення (USDT):",
+                btn_pay: "Оплатити через гаманець",
+                min_error: "⚠️ Мінімальна сума поповнення: 0.6 USDT",
+                nav_lbl_camp: "Прогрес",
+                nav_lbl_create: "Замовлення",
+                nav_lbl_dep: "Поповнення",
+                loading: "Завантаження...",
+                success_task: "🎉 Завдання успішно створено!",
+                err_balance: "❌ Недостатньо балансу для створення завдання.",
+                err_server: "Помилка зв'язку з сервером.",
+                paying: "⏳ Очікування підпису транзакції..."
+            },
+            en: {
+                nav_campaigns: "My Campaigns",
+                campaigns_desc: "Here is the status of your ordered tasks for subscriptions/likes.",
+                no_campaigns: "You don't have any active campaigns yet",
+                balance_title: "My Advertiser Balance",
+                go_deposit: "⚡️ TOP UP BALANCE",
+                create_title: "Create New Task",
+                create_hint: "Users of the main WoodGrow app will receive 0.0005 USDT per execution.",
+                label_link: "Link to X (Twitter) or Telegram post:",
+                pkg_size: "Package Volume:",
+                pkg_cost: "Package Cost:",
+                btn_submit: "Launch Campaign (0.04 USDT)",
+                btn_submit_free: "Launch Free (0.00 USDT)",
+                deposit_title: "Automatic Deposit",
+                deposit_desc: "Connect your Web3 wallet for instant crediting of USDT to your balance.",
+                label_amount: "Deposit Amount (USDT):",
+                btn_pay: "Pay via Wallet",
+                min_error: "⚠️ Minimum deposit amount is 0.6 USDT",
+                nav_lbl_camp: "Progress",
+                nav_lbl_create: "Order",
+                nav_lbl_dep: "Deposit",
+                loading: "Loading...",
+                success_task: "🎉 Task successfully created!",
+                err_balance: "❌ Insufficient balance to create a task.",
+                err_server: "Server communication error.",
+                paying: "⏳ Waiting for transaction signature..."
+            },
+            ru: {
+                nav_campaigns: "Мои кампании",
+                campaigns_desc: "Здесь отображается статус ваших заказанных заданий на подписки/лайки.",
+                no_campaigns: "У вас еще нет созданных кампаний",
+                balance_title: "Мой Баланс рекламодателя",
+                go_deposit: "⚡️ ПОПОЛНИТЬ СЧЕТ",
+                create_title: "Создать новое задание",
+                create_hint: "Пользователи основного аппа WoodGrow получат по 0.0005 USDT за выполнение.",
+                label_link: "Ссылка на пост X (Twitter) или Telegram:",
+                pkg_size: "Объем пакета:",
+                pkg_cost: "Стоимость пакета:",
+                btn_submit: "Запустить кампанию (0.04 USDT)",
+                btn_submit_free: "Запустить бесплатно (0.00 USDT)",
+                deposit_title: "Автоматическое пополнение",
+                deposit_desc: "Подключите свой Web3-кошелек для мгновенного зачисления USDT на ваш баланс.",
+                label_amount: "Сумма пополнения (USDT):",
+                btn_pay: "Оплатить через кошелек",
+                min_error: "⚠️ Минимальная сумма пополнения: 0.6 USDT",
+                nav_lbl_camp: "Прогресс",
+                nav_lbl_create: "Заказ",
+                nav_lbl_dep: "Пополнение",
+                loading: "Загрузка...",
+                success_task: "🎉 Задание успешно создано!",
+                err_balance: "❌ Недостаточно баланса для создания задания.",
+                err_server: "Ошибка связи с сервером.",
+                paying: "⏳ Ожидание подписи транзакции..."
+            }
+        };
+
+        function openLangModal() { document.getElementById('lang-modal').classList.add('active'); }
+        function closeLangModal() { document.getElementById('lang-modal').classList.remove('active'); }
+
+        function selectLanguage(langCode) {
+            currentLang = langCode;
+            localStorage.setItem('wgtask_user_lang', langCode);
+            applyTranslations();
+            closeLangModal();
+        }
+
+        function initLanguage() {
+            let savedLang = localStorage.getItem('wgtask_user_lang');
+            if (savedLang && translations[savedLang]) {
+                currentLang = savedLang;
+            } else {
+                let tgLang = 'en';
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) {
+                    tgLang = tg.initDataUnsafe.user.language_code.toLowerCase();
+                }
+                if (tgLang === 'uk') currentLang = 'uk';
+                else if (['ru', 'be', 'kk'].includes(tgLang)) currentLang = 'ru';
+                else currentLang = 'en';
+            }
+            applyTranslations();
+        }
+
+        function applyTranslations() {
+            const t = translations[currentLang];
+            document.getElementById('txt-nav-campaigns').innerText = t.nav_campaigns;
+            document.getElementById('txt-campaigns-desc').innerText = t.campaigns_desc;
+            document.getElementById('txt-balance-title').innerText = t.balance_title;
+            document.getElementById('txt-go-deposit').innerText = t.go_deposit;
+            document.getElementById('txt-create-title').innerText = t.create_title;
+            document.getElementById('txt-create-hint').innerText = t.create_hint;
+            document.getElementById('txt-label-link').innerText = t.label_link;
+            document.getElementById('txt-pkg-size').innerText = t.pkg_size;
+            document.getElementById('txt-pkg-cost').innerText = t.pkg_cost;
+            document.getElementById('txt-deposit-title').innerText = t.deposit_title;
+            document.getElementById('txt-deposit-desc').innerText = t.deposit_desc;
+            document.getElementById('txt-label-amount').innerText = t.label_amount;
+            document.getElementById('deposit-error-msg').innerText = t.min_error;
+            
+            document.getElementById('lbl-nav-camp').innerText = t.nav_lbl_camp;
+            document.getElementById('lbl-nav-create').innerText = t.nav_lbl_create;
+            document.getElementById('lbl-nav-dep').innerText = t.nav_lbl_dep;
+
+            updateButtonsUI();
+        }
+
+        function updateButtonsUI() {
+            const t = translations[currentLang];
+            const btnSubmit = document.getElementById('btn-submit-task');
+            if (userId === "6043278492") {
+                btnSubmit.innerText = t.btn_submit_free;
+            } else {
+                btnSubmit.innerText = t.btn_submit;
+            }
+
+            const btnPay = document.getElementById('btn-send-payment');
+            if (!btnPay.disabled && btnPay.innerText.includes('⏳')) {
+                btnPay.innerText = t.paying;
+            } else {
+                btnPay.innerText = t.btn_pay;
+            }
+        }
+
+        function switchTab(tabName, element) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            element.classList.add('active');
+            if (tabName === 'campaigns') fetchAdvertiserData();
+        }
+
+        function switchTabDirect(tabName) {
+            const navEl = document.getElementById('nav-' + tabName);
+            if (navEl) switchTab(tabName, navEl);
+        }
+
+        // ВАЛІДАЦІЯ СУМИ ПОПОВНЕННЯ В РЕАЛЬНОМУ ЧАСІ
+        document.getElementById('deposit-amount').addEventListener('input', function(e) {
+            const amount = parseFloat(e.target.value);
+            const errSpan = document.getElementById('deposit-error-msg');
+            const btnPay = document.getElementById('btn-send-payment');
+            
+            if (isNaN(amount) || amount < 0.6) {
+                errSpan.style.display = 'block';
+                btnPay.disabled = true;
+            } else {
+                errSpan.style.display = 'none';
+                if (tonConnectUI.connected) btnPay.disabled = false;
+            }
+        });
+
+        // ІНІЦІАЛІЗАЦІЯ TON CONNECT UI
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://woodgrow.vercel.app/tonconnect-manifest.json', // Твій існуючий маніфест
+            buttonRootId: 'ton-connect-btn'
+        });
+
+        tonConnectUI.onStatusChange(wallet => {
+            const btnPay = document.getElementById('btn-send-payment');
+            const amount = parseFloat(document.getElementById('deposit-amount').value);
+            if (wallet && amount >= 0.6) {
+                btnPay.disabled = false;
+            } else {
+                btnPay.disabled = true;
+            }
+        });
+
+        // ІНТЕГРАЦІЯ ОПЛАТИ ЧЕРЕЗ СМАРТ-КОНТРАКТ USDT
+        async function processWalletPayment() {
+            const amountInput = document.getElementById('deposit-amount').value;
+            const amount = parseFloat(amountInput);
+            if (isNaN(amount) || amount < 0.6) return;
+
+            const t = translations[currentLang];
+            const btnPay = document.getElementById('btn-send-payment');
+            btnPay.disabled = true;
+            btnPay.innerText = t.paying;
+
+            // Конвертуємо USDT в нано-частки (6 знаків після коми)
+            const nanoAmount = (amount * 1000000).toString(); 
+            const USDT_MINTER = "EQCxE6mUt4R3jnKFTj74icZEw3df6C6NJ98HV1wMwmJIdfL5"; // Контракт USDT в TON
+            const MY_MASTER_WALLET = "UQBIc_Z8E4S93Y7v2R88w-your-wallet-address-here"; // Твоя адреса буде зчитана з серверного env
+
+            // Формуємо Web3 транзакцію відповідно до стандарту Jetton Transfer
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 360,
+                messages: [
+                    {
+                        address: USDT_MINTER, 
+                        amount: "60000000", // 0.06 TON на комісію мережі
+                        payload: "te6cckEBAQEANQAAsgAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAA=" 
+                        // Сюди бекенд/фронтенд запакує стандартний jetton transfer body на переказ nanoAmount до MY_MASTER_WALLET
+                    }
+                ]
+            };
+
+            try {
+                const result = await tonConnectUI.sendTransaction(transaction);
+                
+                // Після успішного підписання відправляємо BOC-хеш на наш безпечний бекенд
+                const response = await fetch('/api/deposit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        initData: window.Telegram.WebApp.initData,
+                        transactionHash: result.boc // або хеш розрахований з boc
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    balance = data.newBalance;
+                    document.getElementById('adv-balance').innerText = balance.toFixed(4);
+                    alert("Success! Balance topped up.");
+                    switchTabDirect('create');
+                } else {
+                    alert("Error verification: " + (data.error || "Rejected"));
+                }
+            } catch (err) {
+                alert("Transaction canceled or failed.");
+            } finally {
+                btnPay.disabled = false;
+                applyTranslations();
+            }
+        }
+
+        // ЗАПУСК НОВОЇ РЕКЛАМНОЇ КАМПАНІЇ
+        async function submitNewTask() {
+            const taskLink = document.getElementById('task-url').value.trim();
+            const t = translations[currentLang];
+
+            if (!taskLink) {
+                alert("Please enter a valid URL.");
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/create-task', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        initData: window.Telegram.WebApp.initData,
+                        taskLink: taskLink
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    alert(t.success_task);
+                    document.getElementById('task-url').value = "";
+                    fetchAdvertiserData();
+                    switchTabDirect('campaigns');
+                } else {
+                    alert(data.error === "Insufficient balance. Need 0.04 USDT" ? t.err_balance : data.error);
+                }
+            } catch (err) {
+                alert(t.err_server);
+            }
+        }
+
+        // ЗАВАНТАЖЕННЯ ДАНИХ КАБІНЕТУ
+        async function fetchAdvertiserData() {
+            try {
+                const response = await fetch('/api/user', { // Ендпоінт повертає масив task_users/${userId}
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        initData: window.Telegram.WebApp.initData
+                    })
+                });
+
+                if (!response.ok) return;
+                const data = await response.json();
+
+                if (data.success && data.advertiser) {
+                    balance = data.advertiser.balance || 0;
+                    document.getElementById('adv-balance').innerText = balance.toFixed(4);
+
+                    // Рендеринг списку кампаній
+                    const listDiv = document.getElementById('campaigns-list');
+                    const campaigns = data.advertiser.my_campaigns;
+                    
+                    if (campaigns && Object.keys(campaigns).length > 0) {
+                        listDiv.innerHTML = "";
+                        Object.values(campaigns).forEach(camp => {
+                            // Формула прогресу відносно замовленних 20 виконань
+                            let currentViews = camp.current_views || 0;
+                            if (currentViews > 20) currentViews = 20; 
+
+                            listDiv.innerHTML += `
+                                <div class="campaign-item">
+                                    <div style="font-size:12px; color:var(--neon-aqua); word-break:break-all;">🔗 ${camp.link}</div>
+                                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
+                                        <span>Статус: <b>${currentViews >= 20 ? 'Done' : 'Active'}</b></span>
+                                        <span>Прогрес: <b style="color:#ff9f1c">${currentViews} / 20</b></span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        document.getElementById('txt-no-campaigns').style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                console.error("Error fetching cabinet data", e);
+            }
+        }
+
+        async function startApp() {
+            initLanguage();
+            await fetchAdvertiserData();
+        }
+
+        startApp();
     </script>
 </body>
 </html>
