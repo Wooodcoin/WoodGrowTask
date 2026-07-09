@@ -15,7 +15,7 @@ if (!admin.apps.length) {
 }
 
 const db = admin.database();
-const SUPER_ADMIN_ID = "6043278492"; // Твій Telegram ID (з файлу індексу)
+const SUPER_ADMIN_ID = "6043278492"; // Твій Telegram ID
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -48,6 +48,16 @@ export default async function handler(req, res) {
     }
 
     try {
+        // === НОВА ПЕРЕВІРКА: ОДНЕ ПОСИЛАННЯ — ОДНЕ ЗАВДАННЯ НАЗАВЖДИ ===
+        const tasksSnapshot = await db.ref('tasks').orderByChild('link').equalTo(taskLink).once('value');
+        if (tasksSnapshot.exists()) {
+            return res.status(409).json({ 
+                error: 'duplicate_link', 
+                error_ua: 'Завдання для цього посилання вже було створено раніше!' 
+            });
+        }
+        // ============================================================
+
         const isSuperAdmin = (userId.toString() === SUPER_ADMIN_ID);
         const advRef = db.ref(`task_users/${userId}`);
         
