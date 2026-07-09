@@ -235,7 +235,7 @@
                 <h3 style="text-align: center;" id="txt-create-title">Створити нове завдання</h3>
                 <p style="color: #8b9e9f; font-size: 13px; text-align: center; margin-top: -5px; margin-bottom: 15px;" id="txt-create-hint">Завдання призначені для лайків (реакцій) на пости.</p>
                 
-                <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на post Telegram:</label>
+                <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на пост Telegram:</label>
                 <input type="url" class="input-field" id="task-url" placeholder="https://t.me/woodgrow_coin/45">
                 
                 <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.05);">
@@ -331,6 +331,7 @@
                 loading: "Завантаження...",
                 success_task: "🎉 Завдання успішно створено!",
                 err_balance: "❌ Недостатньо балансу для створення завдання.",
+                err_duplicate: "❌ Це посилання вже використовувалося! Одне посилання можна додати лише один раз.",
                 err_server: "Помилка зв'язку з сервером.",
                 paying: "⏳ Очікування підпису транзакції...",
                 status_done: "Виконано",
@@ -361,6 +362,7 @@
                 loading: "Loading...",
                 success_task: "🎉 Task successfully created!",
                 err_balance: "❌ Insufficient balance to create a task.",
+                err_duplicate: "❌ This link has already been used! One link can only be added once.",
                 err_server: "Server communication error.",
                 paying: "⏳ Waiting for transaction signature...",
                 status_done: "Done",
@@ -391,6 +393,7 @@
                 loading: "Загрузка...",
                 success_task: "🎉 Задание успешно создано!",
                 err_balance: "❌ Недостаточно баланса для создания задания.",
+                err_duplicate: "❌ Эта ссылка уже использовалась! Одну ссылку можно добавить только один раз.",
                 err_server: "Ошибка связи с сервером.",
                 paying: "⏳ Ожидание подписи транзакции...",
                 status_done: "Выполнено",
@@ -585,7 +588,13 @@
                     fetchAdvertiserData();
                     switchTabDirect('campaigns');
                 } else {
-                    alert(data.error === "Insufficient balance. Need 0.04 USDT" ? t.err_balance : data.error);
+                    if (response.status === 409 || data.error === "duplicate_link") {
+                        alert(t.err_duplicate);
+                    } else if (data.error === "Insufficient balance. Need 0.04 USDT") {
+                        alert(t.err_balance);
+                    } else {
+                        alert(data.error || t.err_server);
+                    }
                 }
             } catch (err) {
                 alert(t.err_server);
