@@ -233,17 +233,16 @@
 
             <div class="card" style="text-align: left;">
                 <h3 style="text-align: center;" id="txt-create-title">Створити нове завдання</h3>
-                <p style="color: #8b9e9f; font-size: 12px; margin: 0 0 10px 0;" id="txt-create-hint">Користувачі основної апки WoodGrow отримають по 0.0005 USDT за виконання.</p>
                 
-                <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua);" id="txt-label-link">Посилання на пост X (Twitter) або Telegram:</label>
-                <input type="url" class="input-field" id="task-url" placeholder="https://t.me/channel/123 або https://x.com/...">
+                <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на пост або канал Telegram:</label>
+                <input type="url" class="input-field" id="task-url" placeholder="https://t.me/channel/123">
                 
-                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.05);">
                     <div style="display: flex; justify-content: space-between; font-size: 13px;">
                         <span id="txt-pkg-size">Обсяг пакету:</span>
-                        <span style="color: var(--neon-aqua); font-weight: bold;">20 виконань (+6 бонус)</span>
+                        <span style="color: var(--neon-aqua); font-weight: bold;" id="txt-pkg-value">20 виконань</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 5px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 6px;">
                         <span id="txt-pkg-cost">Вартість пакету:</span>
                         <span style="color: #ff9f1c; font-weight: bold;">0.04 USDT</span>
                     </div>
@@ -313,9 +312,9 @@
                 balance_title: "Мій Баланс рекламодавця",
                 go_deposit: "⚡️ ПОПОВНИТИ РАХУНОК",
                 create_title: "Створити нове завдання",
-                create_hint: "Користувачі основної апки WoodGrow отримають по 0.0005 USDT за виконання.",
-                label_link: "Посилання на пост X (Twitter) або Telegram:",
+                label_link: "Посилання на пост або канал Telegram:",
                 pkg_size: "Обсяг пакету:",
+                pkg_value: "20 виконань",
                 pkg_cost: "Вартість пакету:",
                 btn_submit: "Запустити кампанію (0.04 USDT)",
                 btn_submit_free: "Запустити безкоштовно (0.00 USDT)",
@@ -331,7 +330,9 @@
                 success_task: "🎉 Завдання успішно створено!",
                 err_balance: "❌ Недостатньо балансу для створення завдання.",
                 err_server: "Помилка зв'язку з сервером.",
-                paying: "⏳ Очікування підпису транзакції..."
+                paying: "⏳ Очікування підпису транзакції...",
+                status_done: "Виконано",
+                status_active: "Активне"
             },
             en: {
                 nav_campaigns: "My Campaigns",
@@ -340,9 +341,9 @@
                 balance_title: "My Advertiser Balance",
                 go_deposit: "⚡️ TOP UP BALANCE",
                 create_title: "Create New Task",
-                create_hint: "Users of the main WoodGrow app will receive 0.0005 USDT per execution.",
-                label_link: "Link to X (Twitter) or Telegram post:",
+                label_link: "Link to Telegram post or channel:",
                 pkg_size: "Package Volume:",
+                pkg_value: "20 views",
                 pkg_cost: "Package Cost:",
                 btn_submit: "Launch Campaign (0.04 USDT)",
                 btn_submit_free: "Launch Free (0.00 USDT)",
@@ -358,7 +359,9 @@
                 success_task: "🎉 Task successfully created!",
                 err_balance: "❌ Insufficient balance to create a task.",
                 err_server: "Server communication error.",
-                paying: "⏳ Waiting for transaction signature..."
+                paying: "⏳ Waiting for transaction signature...",
+                status_done: "Done",
+                status_active: "Active"
             },
             ru: {
                 nav_campaigns: "Мои кампании",
@@ -367,9 +370,9 @@
                 balance_title: "Мой Баланс рекламодателя",
                 go_deposit: "⚡️ ПОПОЛНИТЬ СЧЕТ",
                 create_title: "Создать новое задание",
-                create_hint: "Пользователи основного аппа WoodGrow получат по 0.0005 USDT за выполнение.",
-                label_link: "Ссылка на пост X (Twitter) или Telegram:",
+                label_link: "Ссылка на пост или канал Telegram:",
                 pkg_size: "Объем пакета:",
+                pkg_value: "20 выполнений",
                 pkg_cost: "Стоимость пакета:",
                 btn_submit: "Запустить кампанию (0.04 USDT)",
                 btn_submit_free: "Запустить бесплатно (0.00 USDT)",
@@ -385,7 +388,9 @@
                 success_task: "🎉 Задание успешно создано!",
                 err_balance: "❌ Недостаточно баланса для создания задания.",
                 err_server: "Ошибка связи с сервером.",
-                paying: "⏳ Ожидание подписи транзакции..."
+                paying: "⏳ Ожидание подписи транзакции...",
+                status_done: "Выполнено",
+                status_active: "Активно"
             }
         };
 
@@ -422,9 +427,9 @@
             document.getElementById('txt-balance-title').innerText = t.balance_title;
             document.getElementById('txt-go-deposit').innerText = t.go_deposit;
             document.getElementById('txt-create-title').innerText = t.create_title;
-            document.getElementById('txt-create-hint').innerText = t.create_hint;
             document.getElementById('txt-label-link').innerText = t.label_link;
             document.getElementById('txt-pkg-size').innerText = t.pkg_size;
+            document.getElementById('txt-pkg-value').innerText = t.pkg_value;
             document.getElementById('txt-pkg-cost').innerText = t.pkg_cost;
             document.getElementById('txt-deposit-title').innerText = t.deposit_title;
             document.getElementById('txt-deposit-desc').innerText = t.deposit_desc;
@@ -468,7 +473,6 @@
             if (navEl) switchTab(tabName, navEl);
         }
 
-        // ВАЛІДАЦІЯ СУМИ ПОПОВНЕННЯ В РЕАЛЬНОМУ ЧАСІ
         document.getElementById('deposit-amount').addEventListener('input', function(e) {
             const amount = parseFloat(e.target.value);
             const errSpan = document.getElementById('deposit-error-msg');
@@ -483,9 +487,8 @@
             }
         });
 
-        // ІНІЦІАЛІЗАЦІЯ TON CONNECT UI
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://woodgrow.vercel.app/tonconnect-manifest.json', // Твій існуючий маніфест
+            manifestUrl: 'https://woodgrow.vercel.app/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-btn'
         });
 
@@ -499,7 +502,6 @@
             }
         });
 
-        // ІНТЕГРАЦІЯ ОПЛАТИ ЧЕРЕЗ СМАРТ-КОНТРАКТ USDT
         async function processWalletPayment() {
             const amountInput = document.getElementById('deposit-amount').value;
             const amount = parseFloat(amountInput);
@@ -510,20 +512,13 @@
             btnPay.disabled = true;
             btnPay.innerText = t.paying;
 
-            // Конвертуємо USDT в нано-частки (6 знаків після коми)
-            const nanoAmount = (amount * 1000000).toString(); 
-            const USDT_MINTER = "EQCxE6mUt4R3jnKFTj74icZEw3df6C6NJ98HV1wMwmJIdfL5"; // Контракт USDT в TON
-            const MY_MASTER_WALLET = "UQBIc_Z8E4S93Y7v2R88w-your-wallet-address-here"; // Твоя адреса буде зчитана з серверного env
-
-            // Формуємо Web3 транзакцію відповідно до стандарту Jetton Transfer
             const transaction = {
                 validUntil: Math.floor(Date.now() / 1000) + 360,
                 messages: [
                     {
-                        address: USDT_MINTER, 
-                        amount: "60000000", // 0.06 TON на комісію мережі
+                        address: "EQCxE6mUt4R3jnKFTj74icZEw3df6C6NJ98HV1wMwmJIdfL5", 
+                        amount: "60000000", 
                         payload: "te6cckEBAQEANQAAsgAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAA=" 
-                        // Сюди бекенд/фронтенд запакує стандартний jetton transfer body на переказ nanoAmount до MY_MASTER_WALLET
                     }
                 ]
             };
@@ -531,14 +526,13 @@
             try {
                 const result = await tonConnectUI.sendTransaction(transaction);
                 
-                // Після успішного підписання відправляємо BOC-хеш на наш безпечний бекенд
                 const response = await fetch('/api/deposit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: userId,
                         initData: window.Telegram.WebApp.initData,
-                        transactionHash: result.boc // або хеш розрахований з boc
+                        transactionHash: result.boc
                     })
                 });
 
@@ -559,7 +553,6 @@
             }
         }
 
-        // ЗАПУСК НОВОЇ РЕКЛАМНОЇ КАМПАНІЇ
         async function submitNewTask() {
             const taskLink = document.getElementById('task-url').value.trim();
             const t = translations[currentLang];
@@ -594,10 +587,9 @@
             }
         }
 
-        // ЗАВАНТАЖЕННЯ ДАНИХ КАБІНЕТУ
         async function fetchAdvertiserData() {
             try {
-                const response = await fetch('/api/user', { // Ендпоінт повертає масив task_users/${userId}
+                const response = await fetch('/api/user', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -613,14 +605,13 @@
                     balance = data.advertiser.balance || 0;
                     document.getElementById('adv-balance').innerText = balance.toFixed(4);
 
-                    // Рендеринг списку кампаній
                     const listDiv = document.getElementById('campaigns-list');
                     const campaigns = data.advertiser.my_campaigns;
                     
                     if (campaigns && Object.keys(campaigns).length > 0) {
                         listDiv.innerHTML = "";
+                        const t = translations[currentLang];
                         Object.values(campaigns).forEach(camp => {
-                            // Формула прогресу відносно замовленних 20 виконань
                             let currentViews = camp.current_views || 0;
                             if (currentViews > 20) currentViews = 20; 
 
@@ -628,7 +619,7 @@
                                 <div class="campaign-item">
                                     <div style="font-size:12px; color:var(--neon-aqua); word-break:break-all;">🔗 ${camp.link}</div>
                                     <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
-                                        <span>Статус: <b>${currentViews >= 20 ? 'Done' : 'Active'}</b></span>
+                                        <span>Статус: <b>${currentViews >= 20 ? t.status_done : t.status_active}</b></span>
                                         <span>Прогрес: <b style="color:#ff9f1c">${currentViews} / 20</b></span>
                                     </div>
                                 </div>
