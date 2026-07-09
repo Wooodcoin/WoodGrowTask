@@ -233,8 +233,9 @@
 
             <div class="card" style="text-align: left;">
                 <h3 style="text-align: center;" id="txt-create-title">Створити нове завдання</h3>
+                <p style="color: #8b9e9f; font-size: 13px; text-align: center; margin-top: -5px; margin-bottom: 15px;" id="txt-create-hint">Завдання призначені для лайків (реакцій) на пости.</p>
                 
-                <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на пост Telegram:</label>
+                <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на post Telegram:</label>
                 <input type="url" class="input-field" id="task-url" placeholder="https://t.me/woodgrow_coin/45">
                 
                 <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.05);">
@@ -312,6 +313,7 @@
                 balance_title: "Мій Баланс рекламодавця",
                 go_deposit: "⚡️ ПОПОВНИТИ РАХУНОК",
                 create_title: "Створити нове завдання",
+                create_hint: "Завдання призначені для лайків (реакцій) на пости.",
                 label_link: "Посилання на пост Telegram:",
                 pkg_size: "Обсяг пакету:",
                 pkg_value: "20 виконань",
@@ -341,6 +343,7 @@
                 balance_title: "My Advertiser Balance",
                 go_deposit: "⚡️ TOP UP BALANCE",
                 create_title: "Create New Task",
+                create_hint: "Tasks are for post likes (reactions).",
                 label_link: "Link to Telegram post:",
                 pkg_size: "Package Volume:",
                 pkg_value: "20 views",
@@ -370,6 +373,7 @@
                 balance_title: "Мой Баланс рекламодателя",
                 go_deposit: "⚡️ ПОПОЛНИТЬ СЧЕТ",
                 create_title: "Создать новое задание",
+                create_hint: "Задания предназначены для лайков (реакций) на посты.",
                 label_link: "Ссылка на пост Telegram:",
                 pkg_size: "Объем пакета:",
                 pkg_value: "20 выполнений",
@@ -427,6 +431,7 @@
             document.getElementById('txt-balance-title').innerText = t.balance_title;
             document.getElementById('txt-go-deposit').innerText = t.go_deposit;
             document.getElementById('txt-create-title').innerText = t.create_title;
+            document.getElementById('txt-create-hint').innerText = t.create_hint;
             document.getElementById('txt-label-link').innerText = t.label_link;
             document.getElementById('txt-pkg-size').innerText = t.pkg_size;
             document.getElementById('txt-pkg-value').innerText = t.pkg_value;
