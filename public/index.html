@@ -311,7 +311,7 @@
                 campaigns_desc: "Тут відображається статус ваших замовлених завдань на лайки до постів.",
                 no_campaigns: "У вас ще немає створених кампаній",
                 balance_title: "Мій Баланс рекламодавця",
-                go_deposit: "⚡️ ПОПОВНИТИ РАХУНОК",
+                go_deposit: "⚡️ ПОПОЛНИТИ РАХУНОК",
                 create_title: "Створити нове завдання",
                 create_hint: "Завдання призначені для лайків (реакцій) на пости.",
                 label_link: "Посилання на пост Telegram:",
@@ -335,7 +335,7 @@
                 err_server: "Помилка зв'язку з сервером.",
                 paying: "⏳ Очікування підпису транзакції...",
                 status_done: "Виконано",
-                status_active: "Активне"
+                status_active: "Актурне"
             },
             en: {
                 nav_campaigns: "My Campaigns",
@@ -520,18 +520,27 @@
             btnPay.disabled = true;
             btnPay.innerText = t.paying;
 
-            const transaction = {
-                validUntil: Math.floor(Date.now() / 1000) + 360,
-                messages: [
-                    {
-                        address: "EQCxE6mUt4R3jnKFTj74icZEw3df6C6NJ98HV1wMwmJIdfL5", 
-                        amount: "60000000", 
-                        payload: "te6cckEBAQEANQAAsgAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAA=" 
-                    }
-                ]
-            };
-
             try {
+                // Виправляємо помилку: робимо запит до сервера для отримання правильних параметрів та payload транзакції
+                const prepareResponse = await fetch('/api/prepare-deposit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        initData: window.Telegram.WebApp.initData,
+                        amount: amount
+                    })
+                });
+
+                if (!prepareResponse.ok) {
+                    const errData = await prepareResponse.json();
+                    alert("Error: " + (errData.error || "Failed to prepare transaction"));
+                    return;
+                }
+
+                const { transaction } = await prepareResponse.json();
+                
+                // Викликаємо гаманець з динамічними даними USDT
                 const result = await tonConnectUI.sendTransaction(transaction);
                 
                 const response = await fetch('/api/deposit', {
@@ -602,6 +611,11 @@
         }
 
         async function fetchAdvertiserData() {
+            // Захист від помилки 400: не робимо запит, якщо Telegram ще не передав initData
+            if (!window.Telegram.WebApp.initData) {
+                return;
+            }
+
             try {
                 const response = await fetch('/api/user', {
                     method: 'POST',
@@ -650,7 +664,10 @@
 
         async function startApp() {
             initLanguage();
-            await fetchAdvertiserData();
+            // Даємо Telegram 300 мс на повну готовність initData, щоб уникнути помилки 400
+            setTimeout(async () => {
+                await fetchAdvertiserData();
+            }, 300);
         }
 
         startApp();
