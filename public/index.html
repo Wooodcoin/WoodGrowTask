@@ -97,6 +97,7 @@
             margin-top: 10px;
             box-shadow: 0 4px 12px rgba(255, 159, 28, 0.3);
             text-transform: uppercase;
+            text-decoration: none;
         }
 
         .btn:disabled {
@@ -228,7 +229,7 @@
             <div class="card">
                 <div class="balance-title" id="txt-balance-title">Мій Баланс рекламодавця</div>
                 <div class="balance-value"><span id="adv-balance">0.0000</span> USDT</div>
-                <button class="btn" style="background: none; border: 1.5px dashed var(--neon-aqua); color: var(--neon-aqua); box-shadow: none; font-size: 12px; padding: 8px;" onclick="switchTabDirect('deposit')" id="txt-go-deposit">⚡️ ПОПОВНИТИ РАХУНОК</button>
+                <button class="btn" style="background: none; border: 1.5px dashed var(--neon-aqua); color: var(--neon-aqua); box-shadow: none; font-size: 12px; padding: 8px;" onclick="switchTabDirect('deposit')" id="txt-go-deposit">⚡️ ПОПОЛНИТИ РАХУНОК</button>
             </div>
 
             <div class="card" style="text-align: left;">
@@ -255,7 +256,7 @@
 
         <div id="tab-deposit" class="tab-content">
             <div class="card">
-                <h3 id="txt-deposit-title">Автоматичне поповнення</h3>
+                <h3 id="txt-deposit-title">Автоматичне пополнение</h3>
                 <p style="color: #8b9e9f; font-size: 13px;" id="txt-deposit-desc">Підключіть свій Web3-гаманець для миттєвого зарахування USDT на ваш баланс.</p>
                 
                 <div id="ton-connect-btn"></div>
@@ -267,6 +268,12 @@
                 </div>
 
                 <button class="btn" id="btn-send-payment" onclick="processWalletPayment()" disabled>Оплатити через гаманець</button>
+
+                <!-- Блок зв'язку з підтримкою з твоїм юзернеймом -->
+                <div style="margin-top: 25px; border-top: 1px dashed rgba(0, 245, 212, 0.2); padding-top: 15px; text-align: center;">
+                    <p style="font-size: 13px; color: #8b9e9f; margin-bottom: 12px;" id="txt-support-hint">Виникли питання чи проблеми з платежем?</p>
+                    <a href="https://t.me/VoooodCoin" target="_blank" class="btn" id="btn-support-link" style="background: transparent; border: 1.5px solid var(--neon-aqua); color: var(--neon-aqua); box-shadow: none; display: inline-block; width: auto; padding: 10px 20px; font-size: 13px; margin-top: 0;">💬 Написати в підтримку</a>
+                </div>
             </div>
         </div>
 
@@ -335,7 +342,9 @@
                 err_server: "Помилка зв'язку з сервером.",
                 paying: "⏳ Очікування підпису транзакції...",
                 status_done: "Виконано",
-                status_active: "Актурне"
+                status_active: "Актурне",
+                support_hint: "Виникли питання чи проблеми з платежем?",
+                support_btn: "💬 Написати в підтримку"
             },
             en: {
                 nav_campaigns: "My Campaigns",
@@ -366,7 +375,9 @@
                 err_server: "Server communication error.",
                 paying: "⏳ Waiting for transaction signature...",
                 status_done: "Done",
-                status_active: "Active"
+                status_active: "Active",
+                support_hint: "Have questions or payment issues?",
+                support_btn: "💬 Contact Support"
             },
             ru: {
                 nav_campaigns: "Мои кампании",
@@ -387,7 +398,7 @@
                 label_amount: "Сумма пополнения (USDT):",
                 btn_pay: "Оплатить через кошелек",
                 min_error: "⚠️ Минимальная сумма пополнения: 0.6 USDT",
-                nav_lbl_camp: "Прогресс",
+                nav_lbl_camp: "Progress",
                 nav_lbl_create: "Заказ",
                 nav_lbl_dep: "Пополнение",
                 loading: "Загрузка...",
@@ -397,7 +408,9 @@
                 err_server: "Ошибка связи с сервером.",
                 paying: "⏳ Ожидание подписи транзакции...",
                 status_done: "Выполнено",
-                status_active: "Активно"
+                status_active: "Активно",
+                support_hint: "Возникли вопросы или проблемы с платежом?",
+                support_btn: "💬 Написать в поддержку"
             }
         };
 
@@ -447,6 +460,10 @@
             document.getElementById('lbl-nav-camp').innerText = t.nav_lbl_camp;
             document.getElementById('lbl-nav-create').innerText = t.nav_lbl_create;
             document.getElementById('lbl-nav-dep').innerText = t.nav_lbl_dep;
+
+            // Локалізація блоку підтримки
+            document.getElementById('txt-support-hint').innerText = t.support_hint;
+            document.getElementById('btn-support-link').innerText = t.support_btn;
 
             updateButtonsUI();
         }
@@ -521,7 +538,6 @@
             btnPay.innerText = t.paying;
 
             try {
-                // Виправляємо помилку: робимо запит до сервера для отримання правильних параметрів та payload транзакції
                 const prepareResponse = await fetch('/api/prepare-deposit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -540,7 +556,6 @@
 
                 const { transaction } = await prepareResponse.json();
                 
-                // Викликаємо гаманець з динамічними даними USDT
                 const result = await tonConnectUI.sendTransaction(transaction);
                 
                 const response = await fetch('/api/deposit', {
@@ -611,7 +626,6 @@
         }
 
         async function fetchAdvertiserData() {
-            // Захист від помилки 400: не робимо запит, якщо Telegram ще не передав initData
             if (!window.Telegram.WebApp.initData) {
                 return;
             }
@@ -664,7 +678,6 @@
 
         async function startApp() {
             initLanguage();
-            // Даємо Telegram 300 мс на повну готовність initData, щоб уникнути помилки 400
             setTimeout(async () => {
                 await fetchAdvertiserData();
             }, 300);
