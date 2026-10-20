@@ -246,11 +246,11 @@
                     </div>
                     <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 6px;">
                         <span id="txt-pkg-cost">Вартість пакету:</span>
-                        <span style="color: #ff9f1c; font-weight: bold;">0.04 USDT</span>
+                        <span style="color: #ff9f1c; font-weight: bold;">0.03 USDT</span>
                     </div>
                 </div>
 
-                <button class="btn" id="btn-submit-task" onclick="submitNewTask()">Запустити кампанію (0.04 USDT)</button>
+                <button class="btn" id="btn-submit-task" onclick="submitNewTask()">Запустити кампанію (0.03 USDT)</button>
             </div>
         </div>
 
@@ -324,7 +324,7 @@
                 pkg_size: "Обсяг пакету:",
                 pkg_value: "20 виконань",
                 pkg_cost: "Вартість пакету:",
-                btn_submit: "Запустити кампанію (0.04 USDT)",
+                btn_submit: "Запустити кампанію (0.03 USDT)",
                 btn_submit_free: "Запустити безкоштовно (0.00 USDT)",
                 deposit_title: "Автоматичне поповнення",
                 deposit_desc: "Підключіть свій Web3-гаманець для миттєвого зарахування USDT на ваш баланс.",
@@ -358,7 +358,7 @@
                 pkg_size: "Package Volume:",
                 pkg_value: "20 views",
                 pkg_cost: "Package Cost:",
-                btn_submit: "Launch Campaign (0.04 USDT)",
+                btn_submit: "Launch Campaign (0.03 USDT)",
                 btn_submit_free: "Launch Free (0.00 USDT)",
                 deposit_title: "Automatic Deposit",
                 deposit_desc: "Connect your Web3 wallet for instant crediting of USDT to your balance.",
@@ -392,7 +392,7 @@
                 pkg_size: "Объем пакета:",
                 pkg_value: "20 выполнений",
                 pkg_cost: "Стоимость пакета:",
-                btn_submit: "Запустить кампанию (0.04 USDT)",
+                btn_submit: "Запустить кампанию (0.03 USDT)",
                 btn_submit_free: "Запустить бесплатно (0.00 USDT)",
                 deposit_title: "Автоматическое пополнение",
                 deposit_desc: "Подключите свой Web3-кошелек для мгновенного зачисления USDT на ваш баланс.",
@@ -615,7 +615,7 @@
                 } else {
                     if (response.status === 409 || data.error === "duplicate_link") {
                         alert(t.err_duplicate);
-                    } else if (data.error === "Insufficient balance. Need 0.04 USDT") {
+                    } else if (data.error === "Insufficient balance. Need 0.03 USDT" || data.error?.includes("balance")) {
                         alert(t.err_balance);
                     } else {
                         alert(data.error || t.err_server);
@@ -687,12 +687,10 @@
                         Object.entries(campaigns).forEach(([campId, camp]) => {
                             let currentViews = camp.current_views || 0;
                             
-                            // 1. Приховуємо повністю виконані завдання (20/20 або більше)
                             if (currentViews >= 20) return;
 
                             activeCount++;
                             
-                            // 2. Перевірка 24 годин для появи кнопки дострокового завершення
                             let createdAt = camp.created_at ? new Date(camp.created_at).getTime() : 0;
                             let hoursPassed = (now - createdAt) / (1000 * 60 * 60);
                             let showCancelBtn = createdAt > 0 && hoursPassed >= 24;
