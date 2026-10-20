@@ -16,13 +16,6 @@ if (!admin.apps.length) {
     }
 }
 
-// Функція для створення коректного Jetton Transfer Body (BOC в hex) для USDT
-function createJettonTransferPayload(destinationAddress, amountNano, responseAddress) {
-    // Офіційний формат пакування переказу жетонів у TON (Op-code: 0x0f8a7ea5)
-    // Тут ми передаємо суму, адресу отримувача та куди надсилати решти газу
-    return "te6cckEBAQEANQAAsgAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAA=";
-}
-
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -33,8 +26,7 @@ export default async function handler(req, res) {
     }
 
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-    const MY_WALLET = process.env.USDT_MASTER_WALLET; // Твій гаманець для збору USDT з перемінних середовища Vercel
-    const USDT_MINTER = "EQCxE6mUt4R3jnKFTj74icZEw3df6C6NJ98HV1wMwmJIdfL5"; // Контракт USDT в TON
+    const MY_WALLET = process.env.USDT_MASTER_WALLET; // Твій гаманець із змінних середовища
 
     if (!BOT_TOKEN || !MY_WALLET) return res.status(500).json({ error: 'Server config missing' });
 
@@ -56,16 +48,24 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Telegram validation error' });
     }
 
-    const amountUSDT6Decimals = Math.round(parseFloat(amount) * 1000000);
+    // Переводимо суму USDT у нано (6 знаків) для надійного передавання в коментарі
+    const amountNano = Math.round(parseFloat(amount) * 1000000);
 
-    // Динамічна транзакція для TON Connect (надсилаємо на контракт USDT з викликом переказу на MY_WALLET)
+    // Конвертуємо текстовий коментар (userId та суму) у hex-формат для TON-транзакції
+    const commentText = `topup_${userId}_${amount}`;
+    const commentHex = Buffer.from(commentText, 'utf-8').toString('hex');
+    
+    // Спеціальний префікс для текстового коментаря в TON (00000000 перед байтами тексту)
+    const payloadHex = "00000000" + commentHex;
+
+    // Формуємо чисту і зрозумілу транзакцію безпосередньо на твій гаманець із коментарем
     const transaction = {
         validUntil: Math.floor(Date.now() / 1000) + 600, // 10 хвилин
         messages: [
             {
-                address: USDT_MINTER,
-                amount: "50000000", // 0.05 TON на комісію блокчейну
-                payload: "te6cckEBAQEANQAAsgAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAA=" 
+                address: MY_WALLET, // Надсилаємо напряму на твій гаманець
+                amount: "50000000",   // 0.05 TON на комісію мережі
+                payload: payloadHex   // Коментар у вигляді hex, щоб бекенд розпізнав платіж
             }
         ]
     };
