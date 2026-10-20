@@ -256,7 +256,7 @@
 
         <div id="tab-deposit" class="tab-content">
             <div class="card">
-                <h3 id="txt-deposit-title">Автоматичне пополнение</h3>
+                <h3 id="txt-deposit-title">Автоматичне поповнення</h3>
                 <p style="color: #8b9e9f; font-size: 13px;" id="txt-deposit-desc">Підключіть свій Web3-гаманець для миттєвого зарахування USDT на ваш баланс.</p>
                 
                 <div id="ton-connect-btn"></div>
@@ -269,7 +269,6 @@
 
                 <button class="btn" id="btn-send-payment" onclick="processWalletPayment()" disabled>Оплатити через гаманець</button>
 
-                <!-- Блок зв'язку з підтримкою з твоїм юзернеймом -->
                 <div style="margin-top: 25px; border-top: 1px dashed rgba(0, 245, 212, 0.2); padding-top: 15px; text-align: center;">
                     <p style="font-size: 13px; color: #8b9e9f; margin-bottom: 12px;" id="txt-support-hint">Виникли питання чи проблеми з платежем?</p>
                     <a href="https://t.me/VoooodCoin" target="_blank" class="btn" id="btn-support-link" style="background: transparent; border: 1.5px solid var(--neon-aqua); color: var(--neon-aqua); box-shadow: none; display: inline-block; width: auto; padding: 10px 20px; font-size: 13px; margin-top: 0;">💬 Написати в підтримку</a>
@@ -342,7 +341,8 @@
                 err_server: "Помилка зв'язку з сервером.",
                 paying: "⏳ Очікування підпису транзакції...",
                 status_done: "Виконано",
-                status_active: "Актурне",
+                status_active: "Активне",
+                btn_cancel: "Завершити та повернути кошти",
                 support_hint: "Виникли питання чи проблеми з платежем?",
                 support_btn: "💬 Написати в підтримку"
             },
@@ -376,6 +376,7 @@
                 paying: "⏳ Waiting for transaction signature...",
                 status_done: "Done",
                 status_active: "Active",
+                btn_cancel: "Finish & Refund",
                 support_hint: "Have questions or payment issues?",
                 support_btn: "💬 Contact Support"
             },
@@ -409,6 +410,7 @@
                 paying: "⏳ Ожидание подписи транзакции...",
                 status_done: "Выполнено",
                 status_active: "Активно",
+                btn_cancel: "Завершить и вернуть средства",
                 support_hint: "Возникли вопросы или проблемы с платежом?",
                 support_btn: "💬 Написать в поддержку"
             }
@@ -461,11 +463,11 @@
             document.getElementById('lbl-nav-create').innerText = t.nav_lbl_create;
             document.getElementById('lbl-nav-dep').innerText = t.nav_lbl_dep;
 
-            // Локалізація блоку підтримки
             document.getElementById('txt-support-hint').innerText = t.support_hint;
             document.getElementById('btn-support-link').innerText = t.support_btn;
 
             updateButtonsUI();
+            if (typeof fetchAdvertiserData === 'function') fetchAdvertiserData();
         }
 
         function updateButtonsUI() {
@@ -555,7 +557,6 @@
                 }
 
                 const { transaction } = await prepareResponse.json();
-                
                 const result = await tonConnectUI.sendTransaction(transaction);
                 
                 const response = await fetch('/api/deposit', {
@@ -625,6 +626,33 @@
             }
         }
 
+        async function cancelCampaign(campId) {
+            const t = translations[currentLang];
+            if (!confirm("Завершити завдання достроково та повернути кошти за невиконані перегляди?")) return;
+
+            try {
+                const response = await fetch('/api/cancel-task', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        initData: window.Telegram.WebApp.initData,
+                        campaignId: campId
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    alert("Кампанію успішно завершено, кошти повернено на баланс!");
+                    fetchAdvertiserData();
+                } else {
+                    alert(data.error || t.err_server);
+                }
+            } catch (e) {
+                alert(t.err_server);
+            }
+        }
+
         async function fetchAdvertiserData() {
             if (!window.Telegram.WebApp.initData) {
                 return;
@@ -653,20 +681,43 @@
                     if (campaigns && Object.keys(campaigns).length > 0) {
                         listDiv.innerHTML = "";
                         const t = translations[currentLang];
-                        Object.values(campaigns).forEach(camp => {
+                        const now = Date.now();
+                        let activeCount = 0;
+
+                        Object.entries(campaigns).forEach(([campId, camp]) => {
                             let currentViews = camp.current_views || 0;
-                            if (currentViews > 20) currentViews = 20; 
+                            
+                            // 1. Приховуємо повністю виконані завдання (20/20 або більше)
+                            if (currentViews >= 20) return;
+
+                            activeCount++;
+                            
+                            // 2. Перевірка 24 годин для появи кнопки дострокового завершення
+                            let createdAt = camp.created_at ? new Date(camp.created_at).getTime() : 0;
+                            let hoursPassed = (now - createdAt) / (1000 * 60 * 60);
+                            let showCancelBtn = createdAt > 0 && hoursPassed >= 24;
+
+                            let cancelBtnHtml = showCancelBtn ? `
+                                <button class="btn" style="background:transparent; border:1px solid #ff4444; color:#ff4444; font-size:11px; padding:6px; margin-top:8px; box-shadow:none;" onclick="cancelCampaign('${campId}')">
+                                    ${t.btn_cancel}
+                                </button>
+                            ` : '';
 
                             listDiv.innerHTML += `
                                 <div class="campaign-item">
                                     <div style="font-size:12px; color:var(--neon-aqua); word-break:break-all;">🔗 ${camp.link}</div>
                                     <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
-                                        <span>Статус: <b>${currentViews >= 20 ? t.status_done : t.status_active}</b></span>
+                                        <span>Статус: <b>${t.status_active}</b></span>
                                         <span>Прогрес: <b style="color:#ff9f1c">${currentViews} / 20</b></span>
                                     </div>
+                                    ${cancelBtnHtml}
                                 </div>
                             `;
                         });
+
+                        if (activeCount === 0) {
+                            listDiv.innerHTML = `<p style="color: #5c6970; font-style: italic;">У вас ще немає активних кампаній</p>`;
+                        }
                     } else {
                         document.getElementById('txt-no-campaigns').style.display = 'block';
                     }
