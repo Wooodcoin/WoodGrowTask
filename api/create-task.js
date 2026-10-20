@@ -48,7 +48,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        // === НОВА ПЕРЕВІРКА: ОДНЕ ПОСИЛАННЯ — ОДНЕ ЗАВДАННЯ НАЗАВЖДИ ===
+        // === ПЕРЕВІРКА: ОДНЕ ПОСИЛАННЯ — ОДНЕ ЗАВДАННЯ НАЗАВЖДИ ===
         const tasksSnapshot = await db.ref('tasks').orderByChild('link').equalTo(taskLink).once('value');
         if (tasksSnapshot.exists()) {
             return res.status(409).json({ 
@@ -70,12 +70,12 @@ export default async function handler(req, res) {
             
             currentBalance = parseFloat(advSnapshot.val().balance) || 0;
 
-            if (currentBalance < 0.04) {
-                return res.status(400).json({ error: 'Insufficient balance. Need 0.04 USDT' });
+            if (currentBalance < 0.03) {
+                return res.status(400).json({ error: 'Insufficient balance. Need 0.03 USDT' });
             }
 
-            // Списуємо вартість пакету
-            const newBalance = currentBalance - 0.04;
+            // Списуємо вартість пакету (0.03 USDT)
+            const newBalance = currentBalance - 0.03;
             await advRef.update({ balance: newBalance });
         }
 
@@ -102,12 +102,12 @@ export default async function handler(req, res) {
             id: taskId,
             link: taskLink,
             ordered_views: 20,      // Замовник бачить чисті 20
-            createdAt: timestamp
+            created_at: timestamp   // Зберігаємо дату створення для перевірки 24 годин
         });
 
         return res.status(200).json({
             success: true,
-            message: isSuperAdmin ? 'Task created for free (Admin mode)' : 'Task created successfully, 0.04 USDT debited',
+            message: isSuperAdmin ? 'Task created for free (Admin mode)' : 'Task created successfully, 0.03 USDT debited',
             taskId: taskId
         });
 
