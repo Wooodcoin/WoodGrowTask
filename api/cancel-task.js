@@ -75,7 +75,7 @@ export default async function handler(req, res) {
 
         const currentViews = campaign.current_views || 0;
         const totalViews = 20; // Фіксований обсяг пакету
-        const packageCost = 0.04; // Вартість пакета в USDT
+        const packageCost = 0.03; // Нова вартість пакета в USDT
 
         if (currentViews >= totalViews) {
             return res.status(400).json({ error: 'Campaign already completed' });
