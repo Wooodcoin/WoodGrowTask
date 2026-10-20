@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     }
 
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-    const MY_WALLET = process.env.USDT_MASTER_WALLET; // Твій гаманець із змінних середовища
+    const MY_WALLET = process.env.USDT_MASTER_WALLET;
 
     if (!BOT_TOKEN || !MY_WALLET) return res.status(500).json({ error: 'Server config missing' });
 
@@ -48,24 +48,17 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Telegram validation error' });
     }
 
-    // Переводимо суму USDT у нано (6 знаків) для надійного передавання в коментарі
-    const amountNano = Math.round(parseFloat(amount) * 1000000);
+    // Переводимо суму в нано-одиниці або формуємо стандартний запит переказу TON/USDT
+    // Зробимо суму комісії та переказу максимально простою для мобільного гаманця
+    const nanoAmount = Math.round(parseFloat(amount) * 1000000000).toString();
 
-    // Конвертуємо текстовий коментар (userId та суму) у hex-формат для TON-транзакції
-    const commentText = `topup_${userId}_${amount}`;
-    const commentHex = Buffer.from(commentText, 'utf-8').toString('hex');
-    
-    // Спеціальний префікс для текстового коментаря в TON (00000000 перед байтами тексту)
-    const payloadHex = "00000000" + commentHex;
-
-    // Формуємо чисту і зрозумілу транзакцію безпосередньо на твій гаманець із коментарем
     const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 600, // 10 хвилин
+        validUntil: Math.floor(Date.now() / 1000) + 600,
         messages: [
             {
-                address: MY_WALLET, // Надсилаємо напряму на твій гаманець
-                amount: "50000000",   // 0.05 TON на комісію мережі
-                payload: payloadHex   // Коментар у вигляді hex, щоб бекенд розпізнав платіж
+                address: MY_WALLET,
+                amount: nanoAmount, // Передаємо точну суму у нано (або еквівалент для надійності)
+                payload: ""         // Чистий платіж без складних бінарних пейлоадів, які блокує гаманець
             }
         ]
     };
