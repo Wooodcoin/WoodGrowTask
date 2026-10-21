@@ -31,6 +31,7 @@ export default async function handler(req, res) {
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const LOG_CHAT_ID = process.env.TELEGRAM_LOG_CHAT_ID;
     const MY_WALLET = process.env.USDT_MASTER_WALLET;
+    const TONCENTER_API_KEY = process.env.TONCENTER_API_KEY;
 
     if (!BOT_TOKEN || !MY_WALLET) return res.status(500).json({ error: 'Server config missing' });
 
@@ -60,9 +61,13 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Transaction already processed' });
         }
 
-        // 3. Запит до TON API (Toncenter або Tonapi) для верифікації блокчейн-транзакції
-        // Для стабільності використовуємо офіційний публічний ендпоінт toncenter
-        const tonapiRes = await fetch(`https://toncenter.com/api/v3/transactions?hash=${transactionHash}`);
+        // 3. Запит до TON API (Toncenter v3) для верифікації блокчейн-транзакції
+        const headers = {};
+        if (TONCENTER_API_KEY) {
+            headers['X-API-Key'] = TONCENTER_API_KEY;
+        }
+
+        const tonapiRes = await fetch(`https://toncenter.com/api/v3/transactions?hash=${transactionHash}`, { headers });
         if (!tonapiRes.ok) return res.status(500).json({ error: 'Failed to verify transaction via TON API' });
         
         const txData = await tonapiRes.json();
@@ -79,19 +84,15 @@ export default async function handler(req, res) {
 
         // Парсимо Jetton Transfer (USDT в TON є жетоном)
         let amountUSDT = 0;
-        let isDirectToMe = false;
 
-        // Шукаємо внутрішній переказ USDT (Jetton Wallet Notify або Transfer)
+        // Шукаємо внутрішній переказ USDT (Jetton Wallet Notify)
         if (tx.in_msg && tx.in_msg.decoded_op_name === "jetton_notify") {
             const valueRaw = tx.in_msg.decoded_body?.amount; // Сума в нано-USDT (6 знаків)
-            const senderWallet = tx.in_msg.decoded_body?.sender;
             
             if (valueRaw) {
-                amountUSDT = parseFloat(valueRaw) / 1000000; // Переводимо в чисті USDT (у USDT 6 десяткових знаків, а не 9)
-                isDirectToMe = true; // Публічний API фільтрує транзакції по нашому гаманцю
+                amountUSDT = parseFloat(valueRaw) / 1000000; // Переводимо в чисті USDT (6 знаків після коми)
             }
         } else {
-            // Резервний варіант: якщо дешифрування не спрацювало, перевіряємо trace або суму через вихідні повідомлення смарт-контракту
             return res.status(400).json({ error: 'Invalid transaction type. Expected USDT Jetton transfer.' });
         }
 
