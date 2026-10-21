@@ -510,23 +510,13 @@
                 btnPay.disabled = true;
             } else {
                 errSpan.style.display = 'none';
-                if (tonConnectUI.connected) btnPay.disabled = false;
+                btnPay.disabled = false;
             }
         });
 
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://woodgrow.vercel.app/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-btn'
-        });
-
-        tonConnectUI.onStatusChange(wallet => {
-            const btnPay = document.getElementById('btn-send-payment');
-            const amount = parseFloat(document.getElementById('deposit-amount').value);
-            if (wallet && amount >= 0.6) {
-                btnPay.disabled = false;
-            } else {
-                btnPay.disabled = true;
-            }
         });
 
         async function processWalletPayment() {
@@ -559,23 +549,17 @@
                 const prepareData = await prepareResponse.json();
                 const cfg = prepareData.paymentConfig;
 
-                // Використовуємо TonConnect UI для надсилання стандартного переказу через платіжне сповіщення
-                const transaction = {
-                    validUntil: Math.floor(Date.now() / 1000) + 600,
-                    messages: [
-                        {
-                            address: cfg.recipient,
-                            amount: "50000000", // 0.05 TON на газ
-                            payload: ""
-                        }
-                    ]
-                };
+                // Генерація прямого посилання на гаманець для безпомилкового переказу
+                const comment = encodeURIComponent(`deposit_${userId}`);
+                const payLink = `https://app.tonkeeper.com/transfer/${cfg.recipient}?amount=${cfg.amountNano}&text=${comment}`;
 
-                // Оскільки це прямий переказ TON з коментарем-ідентифікатором, гаманець пропустить його без помилок. 
-                // Або перенаправляємо на зручний платіжний формат через TonConnect:
-                const result = await tonConnectUI.sendTransaction(transaction);
-                
-                alert("Payment request sent! Verification will process shortly.");
+                if (window.Telegram.WebApp.openLink) {
+                    window.Telegram.WebApp.openLink(payLink);
+                } else {
+                    window.open(payLink, '_blank');
+                }
+
+                alert("Payment link generated! Complete the transfer in your wallet.");
                 switchTabDirect('campaigns');
 
             } catch (err) {
