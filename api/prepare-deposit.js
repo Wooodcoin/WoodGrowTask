@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     const usdtNanoAmount = Math.round(parsedAmount * 1000000).toString();
     const USDT_MINTER = "EQCxE6mUt4R3jnKFTj74icZEw3df6C6NJ98HV1wMwmJIdfL5";
 
-    // Повертаємо конфігурацію для прямого поповнення USDT
+    // Повертаємо конфігурацію для коректного переказу жетону
     return res.status(200).json({ 
         success: true, 
         paymentConfig: {
