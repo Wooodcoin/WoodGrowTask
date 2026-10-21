@@ -510,13 +510,23 @@
                 btnPay.disabled = true;
             } else {
                 errSpan.style.display = 'none';
-                btnPay.disabled = false;
+                if (tonConnectUI.connected) btnPay.disabled = false;
             }
         });
 
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://woodgrow.vercel.app/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-btn'
+        });
+
+        tonConnectUI.onStatusChange(wallet => {
+            const btnPay = document.getElementById('btn-send-payment');
+            const amount = parseFloat(document.getElementById('deposit-amount').value);
+            if (wallet && amount >= 0.6) {
+                btnPay.disabled = false;
+            } else {
+                btnPay.disabled = true;
+            }
         });
 
         async function processWalletPayment() {
@@ -542,26 +552,35 @@
 
                 if (!prepareResponse.ok) {
                     const errData = await prepareResponse.json();
-                    alert("Error: " + (errData.error || "Failed to prepare payment"));
+                    alert("Error: " + (errData.error || "Failed to prepare transaction"));
                     return;
                 }
 
                 const prepareData = await prepareResponse.json();
-                const cfg = prepareData.paymentConfig;
+                const transaction = prepareData.transaction;
+                
+                // Викликаємо стандартний TonConnectUI для підписання транзакції в гаманці
+                const result = await tonConnectUI.sendTransaction(transaction);
+                
+                const response = await fetch('/api/deposit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        initData: window.Telegram.WebApp.initData,
+                        transactionHash: result.boc
+                    })
+                });
 
-                // Правильний формат посилання для переказу USDT через контракт-мінтер у Tonkeeper
-                const comment = encodeURIComponent(cfg.comment);
-                const payLink = `https://app.tonkeeper.com/transfer/${cfg.minter}?amount=${cfg.amountNano}&to=${cfg.recipient}&text=${comment}`;
-
-                if (window.Telegram.WebApp.openLink) {
-                    window.Telegram.WebApp.openLink(payLink);
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    balance = data.newBalance;
+                    document.getElementById('adv-balance').innerText = balance.toFixed(4);
+                    alert("Success! Balance topped up.");
+                    switchTabDirect('create');
                 } else {
-                    window.open(payLink, '_blank');
+                    alert("Error verification: " + (data.error || "Rejected"));
                 }
-
-                alert("USDT payment link generated! Complete the transfer in your wallet.");
-                switchTabDirect('campaigns');
-
             } catch (err) {
                 alert("Transaction canceled or failed.");
             } finally {
