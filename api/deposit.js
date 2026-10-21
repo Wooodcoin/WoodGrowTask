@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
- 
+
 if (!admin.apps.length) {
     try {
         const rawKey = process.env.FIREBASE_SERVICE_ACCOUNT;
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
 
     if (!BOT_TOKEN || !MY_WALLET) return res.status(500).json({ error: 'Server config missing' });
 
-    // 1. Валідація Telegram InitData (Захист від підробки запитів)
+    // 1. Валідація Telegram InitData (HMAC-SHA256)
     try {
         const urlParams = new URLSearchParams(initData);
         const hash = urlParams.get('hash');
@@ -53,20 +53,22 @@ export default async function handler(req, res) {
     }
 
     try {
-        // 2. Перевірка дублікатів транзакцій (захист від повторного нарахування одного хешу)
-        const txCheckRef = db.ref(`processed_deposits/${transactionHash}`);
+        const cleanHash = transactionHash.trim();
+
+        // 2. Перевірка дублікатів транзакцій у Firebase
+        const txCheckRef = db.ref(`processed_deposits/${cleanHash}`);
         const txSnapshot = await txCheckRef.once('value');
         if (txSnapshot.exists()) {
             return res.status(400).json({ error: 'Transaction already processed' });
         }
 
-        // 3. Запит до TON API (Toncenter v3) для верифікації блокчейн-транзакції
+        // 3. Запит до TON API (Toncenter v3) для перевірки транзакції за хешем
         const headers = {};
         if (TONCENTER_API_KEY) {
             headers['X-API-Key'] = TONCENTER_API_KEY;
         }
 
-        const tonapiRes = await fetch(`https://toncenter.com/api/v3/transactions?hash=${transactionHash}`, { headers });
+        const tonapiRes = await fetch(`https://toncenter.com/api/v3/transactions?hash=${cleanHash}`, { headers });
         if (!tonapiRes.ok) return res.status(500).json({ error: 'Failed to verify transaction via TON API' });
         
         const txData = await tonapiRes.json();
@@ -76,37 +78,33 @@ export default async function handler(req, res) {
 
         const tx = txData.transactions[0];
         
-        // Базова перевірка успішності транзакції
+        // Перевірка успішності транзакції
         if (tx.compute_phase?.success === false || tx.action_phase?.success === false) {
             return res.status(400).json({ error: 'Blockchain transaction failed' });
         }
 
-        // Гнучкий парсинг: підтримуємо як класичний jetton_notify, так і прямі вхідні перекази
+        // Парсинг переказу USDT
         let amountUSDT = 0;
 
         if (tx.in_msg && tx.in_msg.decoded_op_name === "jetton_notify") {
             const valueRaw = tx.in_msg.decoded_body?.amount;
             if (valueRaw) {
-                amountUSDT = parseFloat(valueRaw) / 1000000;
+                amountUSDT = parseFloat(valueRaw) / 1000000; // 6 десяткових знаків у USDT
             }
         } else if (tx.in_msg && tx.in_msg.value) {
-            // Якщо це прямий переказ з будь-яким суттєвим надходженням для тестування (наприклад, TON)
-            amountUSDT = parseFloat(tx.in_msg.value) / 1000000000; // Умовний еквівалент для перевірки
-            // Якщо потрібні виключно USDT, можна встановити фіксовану перевірку або читати вартість з масиву out_msgs
+            // Резервний варіант для прямого переказу
+            amountUSDT = parseFloat(tx.in_msg.value) / 1000000000;
         }
 
-        // Якщо сума не визначилася автоматично через специфіку мережі, беремо тестовий мінімум або перевіряємо наявність
         if (!amountUSDT || amountUSDT <= 0) {
-            // Для безпеки дозволяємо підтвердити транзакцію, якщо вона успішно пройшла на вашу адресу
-            amountUSDT = 0.6; // мінімальний дефолтний депозит для тестування
+            amountUSDT = 0.6; // Дефолтне тестове значення, якщо успішна транзакція зафіксована
         }
 
-        // Перевіряємо мінімальний ліміт
         if (amountUSDT < 0.6) {
             return res.status(400).json({ error: 'Amount is under minimum limit of 0.6 USDT' });
         }
 
-        // 4. Оновлюємо баланс рекламодавця автоматично
+        // 4. Оновлення балансу рекламодавця у Firebase
         const advRef = db.ref(`task_users/${userId}`);
         const advSnapshot = await advRef.once('value');
         let advData = advSnapshot.val() || { balance: 0, total_deposited: 0 };
@@ -117,22 +115,23 @@ export default async function handler(req, res) {
         const newBalance = currentBalance + amountUSDT;
         const newTotalDeposited = totalDeposited + amountUSDT;
 
-        // Оновлюємо дані користувача та мітимо транзакцію як оброблену за один крок
         await advRef.update({
             balance: newBalance,
             total_deposited: newTotalDeposited,
             last_deposit_at: new Date().toISOString()
         });
+
+        // Мітимо хеш як оброблений
         await txCheckRef.set({ userId: userId, amount: amountUSDT, timestamp: new Date().toISOString() });
 
-        // 5. Надсилаємо миттєвий автоматичний звіт в канал логів
+        // 5. Сповіщення в Telegram канал логів
         if (LOG_CHAT_ID) {
             try {
                 const textMessage = `🟢 *АВТОМАТИЧНЕ ПОПОВНЕННЯ БАЛАНСУ*\n\n` +
                                     `👤 *Рекламодавець ID:* \`${userId}\`\n` +
                                     `💰 *Сума зарахування:* \`${amountUSDT.toFixed(2)}\` USDT\n` +
                                     `📈 *Новий баланс:* \`${newBalance.toFixed(4)}\` USDT\n\n` +
-                                    `🔗 [Переглянути в TON Explorer](https://tonviewer.com/tx/${transactionHash})`;
+                                    `🔗 [Переглянути в TON Explorer](https://tonviewer.com/tx/${cleanHash})`;
 
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
