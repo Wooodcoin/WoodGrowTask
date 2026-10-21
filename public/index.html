@@ -395,7 +395,7 @@
                 btn_submit: "Запустить кампанію (0.03 USDT)",
                 btn_submit_free: "Запустить бесплатно (0.00 USDT)",
                 deposit_title: "Автоматическое пополнение",
-                deposit_desc: "Подключите свой Web3-гаманець для мгновенного зачисления USDT на ваш баланс.",
+                deposit_desc: "Подключите свой Web3-кошелек для мгновенного зачисления USDT на ваш баланс.",
                 label_amount: "Сумма пополнения (USDT):",
                 btn_pay: "Оплатить через кошелек",
                 min_error: "⚠️ Минимальная сумма пополнения: 0.6 USDT",
@@ -549,9 +549,9 @@
                 const prepareData = await prepareResponse.json();
                 const cfg = prepareData.paymentConfig;
 
-                // Генерація прямого посилання на гаманець для безпомилкового переказу
-                const comment = encodeURIComponent(`deposit_${userId}`);
-                const payLink = `https://app.tonkeeper.com/transfer/${cfg.recipient}?amount=${cfg.amountNano}&text=${comment}`;
+                // Формуємо правильне посилання Tonkeeper саме для передачі USDT (Jetton) з параметром jetton та сумою в нано-USDT
+                const comment = encodeURIComponent(cfg.comment);
+                const payLink = `https://app.tonkeeper.com/transfer/${cfg.recipient}?amount=${cfg.amountNano}&jetton=${cfg.minter}&text=${comment}`;
 
                 if (window.Telegram.WebApp.openLink) {
                     window.Telegram.WebApp.openLink(payLink);
@@ -559,7 +559,7 @@
                     window.open(payLink, '_blank');
                 }
 
-                alert("Payment link generated! Complete the transfer in your wallet.");
+                alert("USDT payment link generated! Complete the transfer in your wallet.");
                 switchTabDirect('campaigns');
 
             } catch (err) {
