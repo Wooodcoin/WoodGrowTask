@@ -55,33 +55,17 @@ export default async function handler(req, res) {
 
     // USDT має 6 знаків після коми (нано-USDT)
     const usdtNanoAmount = Math.round(parsedAmount * 1000000).toString();
-
-    // Офіційний мінтер USDT в мережі TON
     const USDT_MINTER = "EQCxE6mUt4R3jnKFTj74icZEw3df6C6NJ98HV1wMwmJIdfL5";
 
-    // Формуємо коректну транзакцію для переказу Jetton (USDT) через TonConnect.
-    // Замість прямих TON відправляємо виклик на контракт жетону з комісією за газ (0.05 TON) 
-    // та вказуємо в payload необхідні параметри переказу на твою майстер-адресу.
-    const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 600,
-        messages: [
-            {
-                // Адреса контракту або користувача для переказу жетонів за стандартною схемою TonConnect
-                address: USDT_MINTER,
-                amount: "70000000", // 0.07 TON комісія на газ для обробки транзакції жетону в мережі
-                payload: "te6cckEBAQEADgAAGCYhQWj70AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==" 
-            }
-        ]
-    };
-
-    // Передаємо також деталі для мобільного гаманця
+    // Повертаємо дані для альтернативного процесу оплати
     return res.status(200).json({ 
         success: true, 
-        transaction,
-        jettonDetails: {
+        paymentConfig: {
             recipient: MY_WALLET,
+            amount: parsedAmount,
             amountNano: usdtNanoAmount,
-            minter: USDT_MINTER
+            minter: USDT_MINTER,
+            comment: `deposit_${userId}_${Date.now()}`
         }
     });
 }
