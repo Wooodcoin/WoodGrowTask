@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WoodGrow TASK - Advertiser Cabinet</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 
     <style>
         :root {
@@ -155,7 +154,6 @@
 
         .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
 
-        #ton-connect-btn { display: flex; justify-content: center; margin: 15px 0; }
         h3 { color: var(--neon-aqua); margin-top: 0; text-transform: uppercase; font-size: 16px; }
         
         .campaign-item {
@@ -207,6 +205,18 @@
             max-width: 400px;
             text-align: center;
         }
+
+        .info-box {
+            background: rgba(0, 245, 212, 0.05);
+            border: 1px dashed var(--neon-aqua);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 12px;
+            text-align: left;
+            font-size: 12px;
+            color: #d1d5db;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -257,17 +267,27 @@
         <div id="tab-deposit" class="tab-content">
             <div class="card">
                 <h3 id="txt-deposit-title">Автоматичне поповнення</h3>
-                <p style="color: #8b9e9f; font-size: 13px;" id="txt-deposit-desc">Підключіть свій Web3-гаманець для миттєвого зарахування USDT на ваш баланс.</p>
-                
-                <div id="ton-connect-btn"></div>
+                <p style="color: #8b9e9f; font-size: 13px;" id="txt-deposit-desc">Перекажіть USDT (TON) на вказаний гаманець та підтвердьте платіж за допомогою Хешу транзакції.</p>
 
                 <div style="text-align: left; margin-top: 15px;">
-                    <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua);" id="txt-label-amount">Сума поповнення (USDT):</label>
-                    <input type="number" class="input-field" id="deposit-amount" placeholder="Мінімум 0.60" step="0.1" min="0.6">
-                    <p style="color: #ff4444; font-size: 11px; margin: 4px 0 0 0; display: none;" id="deposit-error-msg">⚠️ Мінімальна сума поповнення: 0.6 USDT</p>
+                    <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua);" id="txt-label-wallet">Гаманець для поповнення (USDT TON):</label>
+                    <div style="display: flex; gap: 8px; margin-top: 6px;">
+                        <input type="text" class="input-field" id="master-wallet-address" value="Завантаження..." readonly style="font-size: 11px; margin-top: 0;">
+                        <button class="btn" onclick="copyWalletAddress()" style="width: auto; padding: 10px 14px; font-size: 12px; margin-top: 0;">📋</button>
+                    </div>
+
+                    <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-top: 15px; display: block;" id="txt-label-hash">Введіть Хеш виконаної транзакції:</label>
+                    <input type="text" class="input-field" id="tx-hash-input" placeholder="Наприклад: 8b3a0c...f2d">
+
+                    <div class="info-box">
+                        <b>💡 Як знайти Хеш транзакції:</b><br>
+                        1. Здійсніть переказ USDT на адресу вище.<br>
+                        2. У своєму гаманці (Tonkeeper) відкрийте розділ <b>Історія</b> та натисніть на платіж.<br>
+                        3. Скопіюйте рядок <b>«Хеш транзакції»</b> (або Transaction Hash) та вставте його сюди.
+                    </div>
                 </div>
 
-                <button class="btn" id="btn-send-payment" onclick="processWalletPayment()" disabled>Оплатити через гаманець</button>
+                <button class="btn" id="btn-verify-deposit" onclick="submitDepositHash()">Підтвердити поповнення</button>
 
                 <div style="margin-top: 25px; border-top: 1px dashed rgba(0, 245, 212, 0.2); padding-top: 15px; text-align: center;">
                     <p style="font-size: 13px; color: #8b9e9f; margin-bottom: 12px;" id="txt-support-hint">Виникли питання чи проблеми з платежем?</p>
@@ -327,10 +347,10 @@
                 btn_submit: "Запустити кампанію (0.03 USDT)",
                 btn_submit_free: "Запустити безкоштовно (0.00 USDT)",
                 deposit_title: "Автоматичне поповнення",
-                deposit_desc: "Підключіть свій Web3-гаманець для миттєвого зарахування USDT на ваш баланс.",
-                label_amount: "Сума поповнення (USDT):",
-                btn_pay: "Оплатити через гаманець",
-                min_error: "⚠️ Мінімальна сума поповнення: 0.6 USDT",
+                deposit_desc: "Перекажіть USDT (TON) на вказаний гаманець та підтвердьте платіж за допомогою Хешу транзакції.",
+                label_amount: "Гаманець для поповнення (USDT TON):",
+                btn_pay: "Підтвердити поповнення",
+                min_error: "⚠️ Введіть коректний хеш транзакції",
                 nav_lbl_camp: "Прогрес",
                 nav_lbl_create: "Замовлення",
                 nav_lbl_dep: "Поповнення",
@@ -339,7 +359,7 @@
                 err_balance: "❌ Недостатньо балансу для створення завдання.",
                 err_duplicate: "❌ Це посилання вже використовувалося! Одне посилання можна додати лише один раз.",
                 err_server: "Помилка зв'язку з сервером.",
-                paying: "⏳ Підготовка платежу...",
+                paying: "⏳ Перевірка транзакції...",
                 status_done: "Виконано",
                 status_active: "Активне",
                 btn_cancel: "Завершити та повернути кошти",
@@ -361,10 +381,10 @@
                 btn_submit: "Launch Campaign (0.03 USDT)",
                 btn_submit_free: "Launch Free (0.00 USDT)",
                 deposit_title: "Automatic Deposit",
-                deposit_desc: "Connect your Web3 wallet for instant crediting of USDT to your balance.",
-                label_amount: "Deposit Amount (USDT):",
-                btn_pay: "Pay via Wallet",
-                min_error: "⚠️ Minimum deposit amount is 0.6 USDT",
+                deposit_desc: "Transfer USDT (TON) to the wallet address below and confirm using the Transaction Hash.",
+                label_amount: "Deposit Wallet (USDT TON):",
+                btn_pay: "Confirm Deposit",
+                min_error: "⚠️ Please enter a valid transaction hash",
                 nav_lbl_camp: "Progress",
                 nav_lbl_create: "Order",
                 nav_lbl_dep: "Deposit",
@@ -373,7 +393,7 @@
                 err_balance: "❌ Insufficient balance to create a task.",
                 err_duplicate: "❌ This link has already been used! One link can only be added once.",
                 err_server: "Server communication error.",
-                paying: "⏳ Preparing payment...",
+                paying: "⏳ Verifying transaction...",
                 status_done: "Done",
                 status_active: "Active",
                 btn_cancel: "Finish & Refund",
@@ -395,10 +415,10 @@
                 btn_submit: "Запустить кампанію (0.03 USDT)",
                 btn_submit_free: "Запустить бесплатно (0.00 USDT)",
                 deposit_title: "Автоматическое пополнение",
-                deposit_desc: "Подключите свой Web3-кошелек для мгновенного зачисления USDT на ваш баланс.",
-                label_amount: "Сумма пополнения (USDT):",
-                btn_pay: "Оплатить через кошелек",
-                min_error: "⚠️ Минимальная сумма пополнения: 0.6 USDT",
+                deposit_desc: "Переведите USDT (TON) на указанный кошелек и подтвердите платеж с помощью Хэша транзакции.",
+                label_amount: "Кошелек для пополнения (USDT TON):",
+                btn_pay: "Подтвердить пополнение",
+                min_error: "⚠️ Введите корректный хэш транзакции",
                 nav_lbl_camp: "Progress",
                 nav_lbl_create: "Заказ",
                 nav_lbl_dep: "Пополнение",
@@ -407,7 +427,7 @@
                 err_balance: "❌ Недостаточно баланса для создания задания.",
                 err_duplicate: "❌ Эта ссылка уже использовалась! Одну ссылку можно добавить только один раз.",
                 err_server: "Ошибка связи с сервером.",
-                paying: "⏳ Подготовка платежа...",
+                paying: "⏳ Проверка транзакции...",
                 status_done: "Выполнено",
                 status_active: "Активно",
                 btn_cancel: "Завершить и вернуть средства",
@@ -456,8 +476,6 @@
             document.getElementById('txt-pkg-cost').innerText = t.pkg_cost;
             document.getElementById('txt-deposit-title').innerText = t.deposit_title;
             document.getElementById('txt-deposit-desc').innerText = t.deposit_desc;
-            document.getElementById('txt-label-amount').innerText = t.label_amount;
-            document.getElementById('deposit-error-msg').innerText = t.min_error;
             
             document.getElementById('lbl-nav-camp').innerText = t.nav_lbl_camp;
             document.getElementById('lbl-nav-create').innerText = t.nav_lbl_create;
@@ -479,11 +497,11 @@
                 btnSubmit.innerText = t.btn_submit;
             }
 
-            const btnPay = document.getElementById('btn-send-payment');
-            if (!btnPay.disabled && btnPay.innerText.includes('⏳')) {
-                btnPay.innerText = t.paying;
+            const btnVerify = document.getElementById('btn-verify-deposit');
+            if (!btnVerify.disabled && btnVerify.innerText.includes('⏳')) {
+                btnVerify.innerText = t.paying;
             } else {
-                btnPay.innerText = t.btn_pay;
+                btnVerify.innerText = t.btn_pay;
             }
         }
 
@@ -493,6 +511,7 @@
             document.getElementById('tab-' + tabName).classList.add('active');
             element.classList.add('active');
             if (tabName === 'campaigns') fetchAdvertiserData();
+            if (tabName === 'deposit') loadMasterWalletInfo();
         }
 
         function switchTabDirect(tabName) {
@@ -500,91 +519,80 @@
             if (navEl) switchTab(tabName, navEl);
         }
 
-        document.getElementById('deposit-amount').addEventListener('input', function(e) {
-            const amount = parseFloat(e.target.value);
-            const errSpan = document.getElementById('deposit-error-msg');
-            const btnPay = document.getElementById('btn-send-payment');
-            
-            if (isNaN(amount) || amount < 0.6) {
-                errSpan.style.display = 'block';
-                btnPay.disabled = true;
-            } else {
-                errSpan.style.display = 'none';
-                if (tonConnectUI.connected) btnPay.disabled = false;
-            }
-        });
-
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://woodgrow.vercel.app/tonconnect-manifest.json',
-            buttonRootId: 'ton-connect-btn'
-        });
-
-        tonConnectUI.onStatusChange(wallet => {
-            const btnPay = document.getElementById('btn-send-payment');
-            const amount = parseFloat(document.getElementById('deposit-amount').value);
-            if (wallet && amount >= 0.6) {
-                btnPay.disabled = false;
-            } else {
-                btnPay.disabled = true;
-            }
-        });
-
-        async function processWalletPayment() {
-            const amountInput = document.getElementById('deposit-amount').value;
-            const amount = parseFloat(amountInput);
-            if (isNaN(amount) || amount < 0.6) return;
-
-            const t = translations[currentLang];
-            const btnPay = document.getElementById('btn-send-payment');
-            btnPay.disabled = true;
-            btnPay.innerText = t.paying;
-
+        async function loadMasterWalletInfo() {
             try {
-                const prepareResponse = await fetch('/api/prepare-deposit', {
+                const response = await fetch('/api/prepare-deposit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: userId,
                         initData: window.Telegram.WebApp.initData,
-                        amount: amount
+                        amount: 0.6
                     })
                 });
 
-                if (!prepareResponse.ok) {
-                    const errData = await prepareResponse.json();
-                    alert("Error: " + (errData.error || "Failed to prepare transaction"));
-                    return;
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.depositInfo && data.depositInfo.masterWallet) {
+                        document.getElementById('master-wallet-address').value = data.depositInfo.masterWallet;
+                    }
                 }
+            } catch (e) {
+                console.error("Error loading wallet address", e);
+            }
+        }
 
-                const prepareData = await prepareResponse.json();
-                const transaction = prepareData.transaction;
-                
-                // Викликаємо стандартний TonConnectUI для підписання транзакції в гаманці
-                const result = await tonConnectUI.sendTransaction(transaction);
-                
+        function copyWalletAddress() {
+            const walletInput = document.getElementById('master-wallet-address');
+            if (!walletInput.value || walletInput.value.includes('Завантаження')) return;
+
+            navigator.clipboard.writeText(walletInput.value).then(() => {
+                alert("Адресу гаманця успішно скопійовано!");
+            }).catch(() => {
+                walletInput.select();
+                document.execCommand('copy');
+                alert("Адресу скопійовано!");
+            });
+        }
+
+        async function submitDepositHash() {
+            const hashInput = document.getElementById('tx-hash-input').value.trim();
+            if (!hashInput) {
+                alert("Будь ласка, введіть хеш виконаної транзакції.");
+                return;
+            }
+
+            const t = translations[currentLang];
+            const btnVerify = document.getElementById('btn-verify-deposit');
+            btnVerify.disabled = true;
+            btnVerify.innerText = t.paying;
+
+            try {
                 const response = await fetch('/api/deposit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: userId,
                         initData: window.Telegram.WebApp.initData,
-                        transactionHash: result.boc
+                        transactionHash: hashInput
                     })
                 });
 
                 const data = await response.json();
+
                 if (response.ok && data.success) {
                     balance = data.newBalance;
                     document.getElementById('adv-balance').innerText = balance.toFixed(4);
-                    alert("Success! Balance topped up.");
+                    document.getElementById('tx-hash-input').value = "";
+                    alert("🎉 Успішно! Баланс поповнено.");
                     switchTabDirect('create');
                 } else {
-                    alert("Error verification: " + (data.error || "Rejected"));
+                    alert("❌ Помилка перевірки: " + (data.error || "Транзакцію не знайдено"));
                 }
             } catch (err) {
-                alert("Transaction canceled or failed.");
+                alert("Помилка зв'язку з сервером.");
             } finally {
-                btnPay.disabled = false;
+                btnVerify.disabled = false;
                 applyTranslations();
             }
         }
