@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-
+ 
 if (!admin.apps.length) {
     try {
         const rawKey = process.env.FIREBASE_SERVICE_ACCOUNT;
