@@ -30,7 +30,7 @@ export default async function handler(req, res) {
 
     if (!BOT_TOKEN || !MY_WALLET) return res.status(500).json({ error: 'Server config missing' });
 
-    // Валідація Telegram InitData
+    // Валідація Telegram InitData (захист від підробки)
     try {
         const urlParams = new URLSearchParams(initData);
         const hash = urlParams.get('hash');
@@ -53,24 +53,13 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Minimum deposit is 0.6 USDT' });
     }
 
-    const usdtNanoAmount = Math.round(parsedAmount * 1000000).toString();
-    const USDT_MINTER = "EQCxE6mUt4R3jnKFTj74icZEw3df6C6NJ98HV1wMwmJIdfL5";
-
-    // Формуємо структуру транзакції для TonConnect (стандартний переказ жетону через гаманець користувача)
-    // Гаманець сам знайде гаманець користувача в мережі USDT і відправить його на MY_WALLET з коментарем
-    const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 600,
-        messages: [
-            {
-                address: USDT_MINTER,
-                amount: "50000000", // 0.05 TON комісія за газ
-                payload: `te6cckEBAQEADgAAGCYhQWj70AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==` // Базовий пейлоад переказу
-            }
-        ]
-    };
-
+    // Повертаємо інформацію для відображення реквізитів у міні-апп
     return res.status(200).json({ 
         success: true, 
-        transaction
+        depositInfo: {
+            masterWallet: MY_WALLET,
+            amount: parsedAmount,
+            minAmount: 0.6
+        }
     });
 }
