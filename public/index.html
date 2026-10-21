@@ -549,9 +549,9 @@
                 const prepareData = await prepareResponse.json();
                 const cfg = prepareData.paymentConfig;
 
-                // Формуємо правильне посилання Tonkeeper саме для передачі USDT (Jetton) з параметром jetton та сумою в нано-USDT
+                // Правильний формат посилання для переказу USDT через контракт-мінтер у Tonkeeper
                 const comment = encodeURIComponent(cfg.comment);
-                const payLink = `https://app.tonkeeper.com/transfer/${cfg.recipient}?amount=${cfg.amountNano}&jetton=${cfg.minter}&text=${comment}`;
+                const payLink = `https://app.tonkeeper.com/transfer/${cfg.minter}?amount=${cfg.amountNano}&to=${cfg.recipient}&text=${comment}`;
 
                 if (window.Telegram.WebApp.openLink) {
                     window.Telegram.WebApp.openLink(payLink);
