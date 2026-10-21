@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     const usdtNanoAmount = Math.round(parsedAmount * 1000000).toString();
     const USDT_MINTER = "EQCxE6mUt4R3jnKFTj74icZEw3df6C6NJ98HV1wMwmJIdfL5";
 
-    // Повертаємо дані для альтернативного процесу оплати
+    // Повертаємо конфігурацію для прямого поповнення USDT
     return res.status(200).json({ 
         success: true, 
         paymentConfig: {
@@ -65,7 +65,7 @@ export default async function handler(req, res) {
             amount: parsedAmount,
             amountNano: usdtNanoAmount,
             minter: USDT_MINTER,
-            comment: `deposit_${userId}_${Date.now()}`
+            comment: `deposit_${userId}`
         }
     });
 }
