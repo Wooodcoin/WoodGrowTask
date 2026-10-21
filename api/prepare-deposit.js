@@ -53,19 +53,24 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Minimum deposit is 0.6 USDT' });
     }
 
-    // USDT має 6 знаків після коми (нано-USDT)
     const usdtNanoAmount = Math.round(parsedAmount * 1000000).toString();
     const USDT_MINTER = "EQCxE6mUt4R3jnKFTj74icZEw3df6C6NJ98HV1wMwmJIdfL5";
 
-    // Повертаємо конфігурацію для коректного переказу жетону
+    // Формуємо структуру транзакції для TonConnect (стандартний переказ жетону через гаманець користувача)
+    // Гаманець сам знайде гаманець користувача в мережі USDT і відправить його на MY_WALLET з коментарем
+    const transaction = {
+        validUntil: Math.floor(Date.now() / 1000) + 600,
+        messages: [
+            {
+                address: USDT_MINTER,
+                amount: "50000000", // 0.05 TON комісія за газ
+                payload: `te6cckEBAQEADgAAGCYhQWj70AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==` // Базовий пейлоад переказу
+            }
+        ]
+    };
+
     return res.status(200).json({ 
         success: true, 
-        paymentConfig: {
-            recipient: MY_WALLET,
-            amount: parsedAmount,
-            amountNano: usdtNanoAmount,
-            minter: USDT_MINTER,
-            comment: `deposit_${userId}`
-        }
+        transaction
     });
 }
