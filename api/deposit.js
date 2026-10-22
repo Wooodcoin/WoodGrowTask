@@ -53,58 +53,83 @@ export default async function handler(req, res) {
     }
 
     try {
-        const cleanHash = transactionHash.trim();
-
-        // 2. Перевірка дублікатів транзакцій у Firebase
-        const txCheckRef = db.ref(`processed_deposits/${cleanHash}`);
-        const txSnapshot = await txCheckRef.once('value');
-        if (txSnapshot.exists()) {
-            return res.status(400).json({ error: 'Transaction already processed' });
-        }
-
-        // 3. Запит до TON API (Toncenter v3) для перевірки транзакції за хешем
+        const inputStr = transactionHash.trim();
         const headers = {};
         if (TONCENTER_API_KEY) {
             headers['X-API-Key'] = TONCENTER_API_KEY;
         }
 
-        const tonapiRes = await fetch(`https://toncenter.com/api/v3/transactions?hash=${cleanHash}`, { headers });
-        if (!tonapiRes.ok) return res.status(500).json({ error: 'Failed to verify transaction via TON API' });
-        
-        const txData = await tonapiRes.json();
-        if (!txData.transactions || txData.transactions.length === 0) {
-            return res.status(404).json({ error: 'Transaction not found in blockchain' });
-        }
-
-        const tx = txData.transactions[0];
-        
-        // Перевірка успішності транзакції
-        if (tx.compute_phase?.success === false || tx.action_phase?.success === false) {
-            return res.status(400).json({ error: 'Blockchain transaction failed' });
-        }
-
-        // Парсинг переказу USDT
+        let verifiedTxHash = "";
         let amountUSDT = 0;
 
-        if (tx.in_msg && tx.in_msg.decoded_op_name === "jetton_notify") {
-            const valueRaw = tx.in_msg.decoded_body?.amount;
-            if (valueRaw) {
-                amountUSDT = parseFloat(valueRaw) / 1000000; // 6 десяткових знаків у USDT
+        // Визначаємо тип вводу: Адреса гаманця (починається на EQ, UQ, 0: тощо) чи Хеш транзакції
+        const isWalletAddress = inputStr.length < 60 || inputStr.startsWith('EQ') || inputStr.startsWith('UQ') || inputStr.startsWith('0:');
+
+        if (isWalletAddress) {
+            // Шлях А: Користувач ввів адресу свого гаманця -> шукаємо останні перекази Jetton USDT від цієї адреси
+            const jettonRes = await fetch(`https://toncenter.com/api/v3/jetton/transfers?owner_address=${inputStr}&direction=out&limit=5`, { headers });
+            
+            if (!jettonRes.ok) {
+                return res.status(500).json({ error: 'Failed to query transfers for wallet address' });
             }
-        } else if (tx.in_msg && tx.in_msg.value) {
-            // Резервний варіант для прямого переказу
-            amountUSDT = parseFloat(tx.in_msg.value) / 1000000000;
+
+            const jettonData = await jettonRes.json();
+            const transfers = jettonData.jetton_transfers || [];
+
+            if (transfers.length === 0) {
+                return res.status(404).json({ error: 'No USDT transfers found for this wallet address' });
+            }
+
+            // Шукаємо найновіший переказ, спрямований на наш майстер-гаманець
+            const validTransfer = transfers.find(t => t.destination && t.destination.toLowerCase() === MY_WALLET.toLowerCase());
+
+            if (!validTransfer) {
+                return res.status(404).json({ error: 'No matching deposit to master wallet found' });
+            }
+
+            verifiedTxHash = validTransfer.transaction_hash;
+            amountUSDT = parseFloat(validTransfer.amount) / 1000000; // 6 десяткових знаків у USDT
+        } else {
+            // Шлях Б: Користувач ввів безпосередньо Хеш транзакції
+            verifiedTxHash = inputStr;
+            
+            const tonapiRes = await fetch(`https://toncenter.com/api/v3/transactions?hash=${verifiedTxHash}`, { headers });
+            if (!tonapiRes.ok) return res.status(500).json({ error: 'Failed to verify transaction via TON API' });
+            
+            const txData = await tonapiRes.json();
+            if (!txData.transactions || txData.transactions.length === 0) {
+                return res.status(404).json({ error: 'Transaction not found in blockchain' });
+            }
+
+            const tx = txData.transactions[0];
+            if (tx.compute_phase?.success === false || tx.action_phase?.success === false) {
+                return res.status(400).json({ error: 'Blockchain transaction failed' });
+            }
+
+            if (tx.in_msg && tx.in_msg.decoded_op_name === "jetton_notify") {
+                const valueRaw = tx.in_msg.decoded_body?.amount;
+                if (valueRaw) amountUSDT = parseFloat(valueRaw) / 1000000;
+            } else if (tx.in_msg && tx.in_msg.value) {
+                amountUSDT = parseFloat(tx.in_msg.value) / 1000000000;
+            }
         }
 
         if (!amountUSDT || amountUSDT <= 0) {
-            amountUSDT = 0.6; // Дефолтне тестове значення, якщо успішна транзакція зафіксована
+            amountUSDT = 0.6; // Резервний мінімум
         }
 
         if (amountUSDT < 0.6) {
             return res.status(400).json({ error: 'Amount is under minimum limit of 0.6 USDT' });
         }
 
-        // 4. Оновлення балансу рекламодавця у Firebase
+        // 2. Перевірка дублікатів транзакцій у Firebase за унікальним хешем
+        const txCheckRef = db.ref(`processed_deposits/${verifiedTxHash}`);
+        const txSnapshot = await txCheckRef.once('value');
+        if (txSnapshot.exists()) {
+            return res.status(400).json({ error: 'Transaction already processed' });
+        }
+
+        // 3. Автоматичне оновлення балансу рекламодавця у Firebase
         const advRef = db.ref(`task_users/${userId}`);
         const advSnapshot = await advRef.once('value');
         let advData = advSnapshot.val() || { balance: 0, total_deposited: 0 };
@@ -121,17 +146,17 @@ export default async function handler(req, res) {
             last_deposit_at: new Date().toISOString()
         });
 
-        // Мітимо хеш як оброблений
+        // Фіксуємо оброблений хеш
         await txCheckRef.set({ userId: userId, amount: amountUSDT, timestamp: new Date().toISOString() });
 
-        // 5. Сповіщення в Telegram канал логів
+        // 4. Надсилання сповіщення в канал логів Telegram
         if (LOG_CHAT_ID) {
             try {
                 const textMessage = `🟢 *АВТОМАТИЧНЕ ПОПОВНЕННЯ БАЛАНСУ*\n\n` +
                                     `👤 *Рекламодавець ID:* \`${userId}\`\n` +
                                     `💰 *Сума зарахування:* \`${amountUSDT.toFixed(2)}\` USDT\n` +
                                     `📈 *Новий баланс:* \`${newBalance.toFixed(4)}\` USDT\n\n` +
-                                    `🔗 [Переглянути в TON Explorer](https://tonviewer.com/tx/${cleanHash})`;
+                                    `🔗 [Переглянути в TON Explorer](https://tonviewer.com/tx/${verifiedTxHash})`;
 
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
