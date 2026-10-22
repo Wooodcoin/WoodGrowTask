@@ -267,7 +267,7 @@
         <div id="tab-deposit" class="tab-content">
             <div class="card">
                 <h3 id="txt-deposit-title">Автоматичне поповнення</h3>
-                <p style="color: #8b9e9f; font-size: 13px;" id="txt-deposit-desc">Перекажіть USDT (TON) на вказаний гаманець та підтвердьте платіж за допомогою Хешу транзакції.</p>
+                <p style="color: #8b9e9f; font-size: 13px;" id="txt-deposit-desc">Перекажіть USDT (TON) на вказаний гаманець та підтвердьте платіж за допомогою вашого Гаманця або Хешу транзакції.</p>
 
                 <div style="text-align: left; margin-top: 15px;">
                     <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua);" id="txt-label-wallet">Гаманець для поповнення (USDT TON):</label>
@@ -276,14 +276,14 @@
                         <button class="btn" onclick="copyWalletAddress()" style="width: auto; padding: 10px 14px; font-size: 12px; margin-top: 0;">📋</button>
                     </div>
 
-                    <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-top: 15px; display: block;" id="txt-label-hash">Введіть Хеш виконаної транзакції:</label>
-                    <input type="text" class="input-field" id="tx-hash-input" placeholder="Наприклад: 8b3a0c...f2d">
+                    <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-top: 15px; display: block;" id="txt-label-hash">Введіть Адресу вашого гаманця або Хеш транзакції:</label>
+                    <input type="text" class="input-field" id="tx-hash-input" placeholder="Адреса гаманця (UQDw...) або Хеш">
 
                     <div class="info-box">
-                        <b>💡 Як знайти Хеш транзакції:</b><br>
+                        <b>💡 Як підтвердити поповнення:</b><br>
                         1. Здійсніть переказ USDT на адресу вище.<br>
-                        2. У своєму гаманці (Tonkeeper) відкрийте розділ <b>Історія</b> та натисніть на платіж.<br>
-                        3. Скопіюйте рядок <b>«Хеш транзакції»</b> (або Transaction Hash) та вставте його сюди.
+                        2. Вкажіть сюди <b>Адресу вашого гаманця</b>, з якого зроблено переказ, або <b>Хеш транзакції</b> з історії.<br>
+                        3. Натисніть кнопку підтвердження нижче.
                     </div>
                 </div>
 
@@ -347,10 +347,10 @@
                 btn_submit: "Запустити кампанію (0.03 USDT)",
                 btn_submit_free: "Запустити безкоштовно (0.00 USDT)",
                 deposit_title: "Автоматичне поповнення",
-                deposit_desc: "Перекажіть USDT (TON) на вказаний гаманець та підтвердьте платіж за допомогою Хешу транзакції.",
+                deposit_desc: "Перекажіть USDT (TON) на вказаний гаманець та підтвердьте платіж за допомогою вашого Гаманця або Хешу транзакції.",
                 label_amount: "Гаманець для поповнення (USDT TON):",
                 btn_pay: "Підтвердити поповнення",
-                min_error: "⚠️ Введіть коректний хеш транзакції",
+                min_error: "⚠️ Введіть адресу гаманця або хеш транзакції",
                 nav_lbl_camp: "Прогрес",
                 nav_lbl_create: "Замовлення",
                 nav_lbl_dep: "Поповнення",
@@ -381,10 +381,10 @@
                 btn_submit: "Launch Campaign (0.03 USDT)",
                 btn_submit_free: "Launch Free (0.00 USDT)",
                 deposit_title: "Automatic Deposit",
-                deposit_desc: "Transfer USDT (TON) to the wallet address below and confirm using the Transaction Hash.",
+                deposit_desc: "Transfer USDT (TON) to the wallet address below and confirm using your Wallet Address or Transaction Hash.",
                 label_amount: "Deposit Wallet (USDT TON):",
                 btn_pay: "Confirm Deposit",
-                min_error: "⚠️ Please enter a valid transaction hash",
+                min_error: "⚠️ Please enter a wallet address or transaction hash",
                 nav_lbl_camp: "Progress",
                 nav_lbl_create: "Order",
                 nav_lbl_dep: "Deposit",
@@ -415,10 +415,10 @@
                 btn_submit: "Запустить кампанію (0.03 USDT)",
                 btn_submit_free: "Запустить бесплатно (0.00 USDT)",
                 deposit_title: "Автоматическое пополнение",
-                deposit_desc: "Переведите USDT (TON) на указанный кошелек и подтвердите платеж с помощью Хэша транзакции.",
+                deposit_desc: "Переведите USDT (TON) на указанный кошелек и подтвердите платеж с помощью вашего Кошелька или Хэша транзакции.",
                 label_amount: "Кошелек для пополнения (USDT TON):",
                 btn_pay: "Подтвердить пополнение",
-                min_error: "⚠️ Введите корректный хэш транзакции",
+                min_error: "⚠️ Введите адрес кошелька или хэш транзакции",
                 nav_lbl_camp: "Progress",
                 nav_lbl_create: "Заказ",
                 nav_lbl_dep: "Пополнение",
@@ -558,7 +558,7 @@
         async function submitDepositHash() {
             const hashInput = document.getElementById('tx-hash-input').value.trim();
             if (!hashInput) {
-                alert("Будь ласка, введіть хеш виконаної транзакції.");
+                alert("Будь ласка, введіть адресу вашого гаманця або хеш транзакції.");
                 return;
             }
 
@@ -587,7 +587,7 @@
                     alert("🎉 Успішно! Баланс поповнено.");
                     switchTabDirect('create');
                 } else {
-                    alert("❌ Помилка перевірки: " + (data.error || "Транзакцію не знайдено"));
+                    alert("❌ Помилка перевірки: " + (data.error || "Транзакцію або гаманець не знайдено"));
                 }
             } catch (err) {
                 alert("Помилка зв'язку з сервером.");
