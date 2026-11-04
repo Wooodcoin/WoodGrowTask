@@ -75,7 +75,7 @@ export default async function handler(req, res) {
 
         const currentViews = campaign.current_views || 0;
         const totalViews = 20; // Фіксований обсяг пакету
-        const packageCost = 0.03; // Нова вартість пакета в USDT
+        const packageCost = 0.03; // Вартість пакета в USDT
 
         if (currentViews >= totalViews) {
             return res.status(400).json({ error: 'Campaign already completed' });
@@ -89,13 +89,23 @@ export default async function handler(req, res) {
         const currentBalance = parseFloat(advData.balance) || 0;
         const newBalance = currentBalance + refundAmount;
 
-        // Видаляємо кампанію з активних та оновлюємо баланс
+        // Видаляємо кампанію з активних у рекламодавця та оновлюємо баланс
         delete campaigns[campaignId];
 
         await advRef.update({
             balance: newBalance,
             my_campaigns: campaigns
         });
+
+        // ✨ ✨ ✨ НОВИЙ ШОТ: Змінюємо статус глобального завдання на "cancelled",
+        // щоб воно автоматично зникло у користувачів в основній мінапці
+        const globalTaskQuery = db.ref('tasks').orderByChild('id').equalTo(campaignId);
+        const taskSnap = await globalTaskQuery.once('value');
+        if (taskSnap.exists()) {
+            taskSnap.forEach((childSnapshot) => {
+                childSnapshot.ref.update({ status: 'cancelled' });
+            });
+        }
 
         return res.status(200).json({
             success: true,
