@@ -11,7 +11,6 @@
             --bg-main: #040e12;
             --neon-aqua: #00f5d4;
             --ember-gradient: linear-gradient(135deg, #ff9f1c 0%, #ffbf69 50%, #d4a373 100%);
-            --ember-color: #ff9f1c;
             --text-dark: #111111;
             --text-light: #ffffff;
             --card-bg: rgba(4, 18, 24, 0.85);
@@ -21,7 +20,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-main);
-            background-image: linear-gradient(rgba(4, 14, 18, 0.80), rgba(4, 14, 18, 0.95)), url('/images/background-task.png');
+            background-image: linear-gradient(rgba(4, 14, 18, 0.75), rgba(4, 14, 18, 0.90)), url('/images/background-task.png');
             background-repeat: no-repeat;
             background-position: center center;
             background-attachment: fixed;
@@ -110,32 +109,66 @@
             border: 1px solid #2a353a;
         }
 
-        /* Стилі для меню вибору завдань */
-        .task-type-option {
+        /* Стилі меню вибору завдань (як у головному боті) */
+        .task-types-container {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1.5px solid rgba(255, 191, 105, 0.3);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .section-header-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #ffbf69;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .task-type-btn {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1.5px solid rgba(0, 245, 212, 0.3);
-            border-radius: 12px;
-            padding: 12px 15px;
-            margin-bottom: 10px;
+            width: 100%;
+            border-radius: 10px;
+            padding: 11px 14px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
+            box-sizing: border-box;
+            border: 1px solid transparent;
             text-align: left;
         }
 
-        .task-type-option.active {
-            border-color: var(--neon-aqua);
-            background: rgba(0, 245, 212, 0.1);
-            box-shadow: 0 0 12px rgba(0, 245, 212, 0.25);
+        /* Активне завдання (зелене, як у боті) */
+        .task-type-btn.active-task {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+            color: #040e12;
+            box-shadow: 0 0 12px rgba(0, 245, 212, 0.4);
+            border-color: #fff;
         }
 
-        .task-type-option.disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            border-color: rgba(255, 255, 255, 0.1);
+        /* Заблоковані завдання (темні з бордером) */
+        .task-type-btn.locked-task {
+            background: rgba(15, 25, 30, 0.8);
+            color: #8b9e9f;
+            border-color: rgba(255, 255, 255, 0.08);
+            cursor: default;
         }
+
+        .badge-status {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        .badge-active { background: rgba(0, 0, 0, 0.2); color: #fff; }
+        .badge-dev { background: rgba(0, 0, 0, 0.5); color: #ffbf69; border: 1px solid rgba(255, 191, 105, 0.3); }
 
         .input-field {
             width: 100%;
@@ -270,7 +303,7 @@
             </div>
         </div>
 
-        <!-- Вкладка: Створення замовлення (з вибором типу завдання) -->
+        <!-- Вкладка: Створення замовлення -->
         <div id="tab-create" class="tab-content">
             <div class="card">
                 <div class="balance-title" id="txt-balance-title">Мій Баланс рекламодавця</div>
@@ -280,53 +313,44 @@
 
             <div class="card" style="text-align: left;">
                 <h3 style="text-align: center;" id="txt-create-title">Створити нове завдання</h3>
-                <p style="color: #8b9e9f; font-size: 13px; text-align: center; margin-top: -5px; margin-bottom: 15px;" id="txt-select-type-hint">Виберіть тип завдання для замовлення:</p>
                 
-                <!-- Меню вибору типу завдань -->
-                <div id="task-types-menu">
-                    <div class="task-type-option active" onclick="selectTaskType('reactions', this)">
-                        <div>
-                            <div style="font-weight: bold; font-size: 14px; color: #fff;">👍 Реакції на пости</div>
-                            <div style="font-size: 11px; color: #8b9e9f; margin-top: 2px;">Активно • 20 виконань = 0.03 USDT</div>
-                        </div>
-                        <span style="color: var(--neon-aqua); font-size: 16px;">●</span>
-                    </div>
-
-                    <div class="task-type-option disabled">
-                        <div>
-                            <div style="font-weight: bold; font-size: 14px; color: #aaa;">🔒 Скоро нове завдання</div>
-                            <div style="font-size: 11px; color: #666; margin-top: 2px;">В розробці</div>
-                        </div>
-                        <span style="font-size: 14px; color: #666;">⏳</span>
-                    </div>
-
-                    <div class="task-type-option disabled">
-                        <div>
-                            <div style="font-weight: bold; font-size: 14px; color: #aaa;">🔒 Скоро нове завдання</div>
-                            <div style="font-size: 11px; color: #666; margin-top: 2px;">В розробці</div>
-                        </div>
-                        <span style="font-size: 14px; color: #666;">⏳</span>
-                    </div>
-                </div>
-
-                <!-- Блок форми замовлення (активується для вибраного типу) -->
-                <div id="task-form-section" style="margin-top: 20px; border-top: 1px dashed rgba(0,245,212,0.3); padding-top: 15px;">
-                    <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на пост Telegram:</label>
-                    <input type="url" class="input-field" id="task-url" placeholder="https://t.me/woodgrow_coin/45">
+                <!-- Меню виділення типів завдань (як у головному боті) -->
+                <div class="task-types-container" style="margin-top: 15px;">
+                    <div class="section-header-title">🎯 Види завдань</div>
                     
-                    <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.05);">
-                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                            <span id="txt-pkg-size">Обсяг пакетu:</span>
-                            <span style="color: var(--neon-aqua); font-weight: bold;" id="txt-pkg-value">20 виконань</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 6px;">
-                            <span id="txt-pkg-cost">Вартість пакету:</span>
-                            <span style="color: #ff9f1c; font-weight: bold;">0.03 USDT</span>
-                        </div>
+                    <div class="task-type-btn active-task">
+                        <span>👍 Реакції на пости</span>
+                        <span class="badge-status badge-active">Активно</span>
                     </div>
 
-                    <button class="btn" id="btn-submit-task" onclick="submitNewTask()">Запустити кампанію (0.03 USDT)</button>
+                    <div class="task-type-btn locked-task">
+                        <span>🔒 Скоро нове завдання</span>
+                        <span class="badge-status badge-dev">⏳ В розробці</span>
+                    </div>
+
+                    <div class="task-type-btn locked-task">
+                        <span>🔒 Скоро нове завдання</span>
+                        <span class="badge-status badge-dev">⏳ В розробці</span>
+                    </div>
                 </div>
+
+                <p style="color: #8b9e9f; font-size: 12px; text-align: center; margin-bottom: 15px;" id="txt-create-hint">Завдання призначені для лайків (реакцій) на пости.</p>
+                
+                <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на пост Telegram:</label>
+                <input type="url" class="input-field" id="task-url" placeholder="https://t.me/woodgrow_coin/45">
+                
+                <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                        <span id="txt-pkg-size">Обсяг пакету:</span>
+                        <span style="color: var(--neon-aqua); font-weight: bold;" id="txt-pkg-value">20 виконань</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 6px;">
+                        <span id="txt-pkg-cost">Вартість пакету:</span>
+                        <span style="color: #ff9f1c; font-weight: bold;">0.03 USDT</span>
+                    </div>
+                </div>
+
+                <button class="btn" id="btn-submit-task" onclick="submitNewTask()">Запустити кампанію (0.03 USDT)</button>
             </div>
         </div>
 
@@ -399,7 +423,6 @@
 
         let balance = 0.0000;
         let currentLang = 'en';
-        let selectedTaskType = 'reactions'; // Вибраний тип завдання за замовчуванням
 
         const translations = {
             uk: {
@@ -409,7 +432,6 @@
                 balance_title: "Мій Баланс рекламодавця",
                 go_deposit: "⚡️ ПОПОЛНИТИ РАХУНОК",
                 create_title: "Створити нове завдання",
-                select_type_hint: "Виберіть тип завдання для замовлення:",
                 create_hint: "Завдання призначені для лайків (реакцій) на пости.",
                 label_link: "Посилання на пост Telegram:",
                 pkg_size: "Обсяг пакету:",
@@ -444,7 +466,6 @@
                 balance_title: "My Advertiser Balance",
                 go_deposit: "⚡️ TOP UP BALANCE",
                 create_title: "Create New Task",
-                select_type_hint: "Select task type to order:",
                 create_hint: "Tasks are for post likes (reactions).",
                 label_link: "Link to Telegram post:",
                 pkg_size: "Package Volume:",
@@ -479,13 +500,12 @@
                 balance_title: "Мой Баланс рекламодателя",
                 go_deposit: "⚡️ ПОПОЛНИТЬ СЧЕТ",
                 create_title: "Создать новое задание",
-                select_type_hint: "Выберите тип задания для заказа:",
                 create_hint: "Задания предназначены для лайков (реакций) на посты.",
                 label_link: "Ссылка на пост Telegram:",
                 pkg_size: "Объем пакета:",
                 pkg_value: "20 выполнений",
                 pkg_cost: "Стоимость пакета:",
-                btn_submit: "Запустить кампанию (0.03 USDT)",
+                btn_submit: "Запустить кампанію (0.03 USDT)",
                 btn_submit_free: "Запустить бесплатно (0.00 USDT)",
                 deposit_title: "Автоматическое пополнение",
                 deposit_desc: "Переведите USDT (TON) на указанный кошелек и подтвердите платеж с помощью вашего Кошелька или Хэша транзакции.",
@@ -508,13 +528,6 @@
                 support_btn: "💬 Написать в поддержку"
             }
         };
-
-        function selectTaskType(type, element) {
-            selectedTaskType = type;
-            document.querySelectorAll('.task-type-option').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            // У разі додавання нових типів завдань тут можна керувати показом полів форми
-        }
 
         function openLangModal() { document.getElementById('lang-modal').classList.add('active'); }
         function closeLangModal() { document.getElementById('lang-modal').classList.remove('active'); }
@@ -549,7 +562,7 @@
             document.getElementById('txt-balance-title').innerText = t.balance_title;
             document.getElementById('txt-go-deposit').innerText = t.go_deposit;
             document.getElementById('txt-create-title').innerText = t.create_title;
-            document.getElementById('txt-select-type-hint').innerText = t.select_type_hint;
+            document.getElementById('txt-create-hint').innerText = t.create_hint;
             document.getElementById('txt-label-link').innerText = t.label_link;
             document.getElementById('txt-pkg-size').innerText = t.pkg_size;
             document.getElementById('txt-pkg-value').innerText = t.pkg_value;
@@ -693,7 +706,6 @@
                     body: JSON.stringify({
                         userId: userId,
                         initData: window.Telegram.WebApp.initData,
-                        taskType: selectedTaskType, // Передаємо вибраний тип завдання
                         taskLink: taskLink
                     })
                 });
