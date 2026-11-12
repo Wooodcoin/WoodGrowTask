@@ -109,7 +109,7 @@
             border: 1px solid #2a353a;
         }
 
-        /* Стилі меню вибору завдань (як у головному боті) */
+        /* Стилі меню вибору завдань */
         .task-types-container {
             background: rgba(0, 0, 0, 0.4);
             border: 1.5px solid rgba(255, 191, 105, 0.3);
@@ -139,24 +139,17 @@
             font-weight: 700;
             cursor: pointer;
             box-sizing: border-box;
-            border: 1px solid transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 25, 30, 0.8);
+            color: #8b9e9f;
             text-align: left;
         }
 
-        /* Активне завдання (зелене, як у боті) */
         .task-type-btn.active-task {
             background: linear-gradient(135deg, #00b09b, #96c93d);
             color: #040e12;
             box-shadow: 0 0 12px rgba(0, 245, 212, 0.4);
             border-color: #fff;
-        }
-
-        /* Заблоковані завдання (темні з бордером) */
-        .task-type-btn.locked-task {
-            background: rgba(15, 25, 30, 0.8);
-            color: #8b9e9f;
-            border-color: rgba(255, 255, 255, 0.08);
-            cursor: default;
         }
 
         .badge-status {
@@ -169,6 +162,33 @@
 
         .badge-active { background: rgba(0, 0, 0, 0.2); color: #fff; }
         .badge-dev { background: rgba(0, 0, 0, 0.5); color: #ffbf69; border: 1px solid rgba(255, 191, 105, 0.3); }
+
+        /* Пакетні кнопки */
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+
+        .pkg-btn {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1.5px solid rgba(0, 245, 212, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .pkg-btn.selected {
+            background: rgba(0, 245, 212, 0.2);
+            border-color: var(--neon-aqua);
+            box-shadow: 0 0 10px rgba(0, 245, 212, 0.4);
+        }
 
         .input-field {
             width: 100%;
@@ -229,6 +249,14 @@
             padding: 12px;
             margin-top: 10px;
             text-align: left;
+        }
+
+        .submission-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 191, 105, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 8px;
         }
 
         .lang-select-btn {
@@ -296,7 +324,7 @@
         <div id="tab-campaigns" class="tab-content active">
             <div class="card">
                 <h3 id="txt-nav-campaigns">Мої кампанії</h3>
-                <p style="color: #8b9e9f; font-size: 13px;" id="txt-campaigns-desc">Тут відображається статус ваших замовлених завдань на лайки до постів.</p>
+                <p style="color: #8b9e9f; font-size: 13px;" id="txt-campaigns-desc">Тут відображається статус ваших замовлених завдань та звіти користувачів.</p>
                 <div id="campaigns-list">
                     <p style="color: #4a555a; font-style: italic;" id="txt-no-campaigns">У вас ще немає створених кампаній</p>
                 </div>
@@ -314,18 +342,18 @@
             <div class="card" style="text-align: left;">
                 <h3 style="text-align: center;" id="txt-create-title">Створити нове завдання</h3>
                 
-                <!-- Меню виділення типів завдань (як у головному боті) -->
+                <!-- Меню вибору типів завдань -->
                 <div class="task-types-container" style="margin-top: 15px;">
                     <div class="section-header-title">🎯 Види завдань</div>
                     
-                    <div class="task-type-btn active-task">
+                    <div class="task-type-btn" id="type-reaction" onclick="selectTaskType('reaction')">
                         <span>👍 Реакції на пости</span>
                         <span class="badge-status badge-active">Активно</span>
                     </div>
 
-                    <div class="task-type-btn locked-task">
-                        <span>🔒 Скоро нове завдання</span>
-                        <span class="badge-status badge-dev">⏳ В розробці</span>
+                    <div class="task-type-btn active-task" id="type-referral" onclick="selectTaskType('referral')">
+                        <span>👥 Реферали в боти/ігри</span>
+                        <span class="badge-status badge-active">Новинка</span>
                     </div>
 
                     <div class="task-type-btn locked-task">
@@ -334,23 +362,33 @@
                     </div>
                 </div>
 
-                <p style="color: #8b9e9f; font-size: 12px; text-align: center; margin-bottom: 15px;" id="txt-create-hint">Завдання призначені для лайків (реакцій) на пости.</p>
+                <p style="color: #8b9e9f; font-size: 12px; text-align: center; margin-bottom: 15px;" id="txt-create-hint">Запросіть користувачів у свій бот або гру за реферальним посиланням.</p>
                 
-                <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на пост Telegram:</label>
-                <input type="url" class="input-field" id="task-url" placeholder="https://t.me/woodgrow_coin/45">
+                <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на завдання (Бот/Гра/Пост):</label>
+                <input type="url" class="input-field" id="task-url" placeholder="https://t.me/your_bot?start=ref">
                 
+                <!-- Вибір пакету (тільки для рефералів) -->
+                <div id="referral-packages-section">
+                    <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-top: 12px; display: block;">Оберіть пакет рефералів:</label>
+                    <div class="packages-grid">
+                        <div class="pkg-btn selected" onclick="selectPackage(5, 0.02, this)">5 реф.<br><span style="font-size:11px; color:#ff9f1c;">0.02 USDT</span></div>
+                        <div class="pkg-btn" onclick="selectPackage(10, 0.04, this)">10 реф.<br><span style="font-size:11px; color:#ff9f1c;">0.04 USDT</span></div>
+                        <div class="pkg-btn" onclick="selectPackage(20, 0.08, this)">20 реф.<br><span style="font-size:11px; color:#ff9f1c;">0.08 USDT</span></div>
+                    </div>
+                </div>
+
                 <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.05);">
                     <div style="display: flex; justify-content: space-between; font-size: 13px;">
                         <span id="txt-pkg-size">Обсяг пакету:</span>
-                        <span style="color: var(--neon-aqua); font-weight: bold;" id="txt-pkg-value">20 виконань</span>
+                        <span style="color: var(--neon-aqua); font-weight: bold;" id="txt-pkg-value">5 рефералів</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 6px;">
                         <span id="txt-pkg-cost">Вартість пакету:</span>
-                        <span style="color: #ff9f1c; font-weight: bold;">0.03 USDT</span>
+                        <span style="color: #ff9f1c; font-weight: bold;" id="txt-pkg-cost-val">0.02 USDT</span>
                     </div>
                 </div>
 
-                <button class="btn" id="btn-submit-task" onclick="submitNewTask()">Запустити кампанію (0.03 USDT)</button>
+                <button class="btn" id="btn-submit-task" onclick="submitNewTask()">Запустити кампанію (0.02 USDT)</button>
             </div>
         </div>
 
@@ -423,27 +461,26 @@
 
         let balance = 0.0000;
         let currentLang = 'en';
+        let selectedTaskType = 'referral'; // За замовчуванням реферали
+        let selectedPackageSize = 5;
+        let selectedPackageCost = 0.02;
 
         const translations = {
             uk: {
                 nav_campaigns: "Мої кампанії",
-                campaigns_desc: "Тут відображається статус ваших замовлених завдань на лайки до постів.",
+                campaigns_desc: "Тут відображається статус ваших замовлених завдань та звіти користувачів.",
                 no_campaigns: "У вас ще немає створених кампаній",
                 balance_title: "Мій Баланс рекламодавця",
                 go_deposit: "⚡️ ПОПОЛНИТИ РАХУНОК",
                 create_title: "Створити нове завдання",
-                create_hint: "Завдання призначені для лайків (реакцій) на пости.",
-                label_link: "Посилання на пост Telegram:",
+                create_hint: "Запросіть користувачів у свій бот або гру за реферальним посиланням.",
+                label_link: "Посилання на завдання (Бот/Гра):",
                 pkg_size: "Обсяг пакету:",
-                pkg_value: "20 виконань",
                 pkg_cost: "Вартість пакету:",
-                btn_submit: "Запустити кампанію (0.03 USDT)",
-                btn_submit_free: "Запустити безкоштовно (0.00 USDT)",
                 deposit_title: "Автоматичне поповнення",
                 deposit_desc: "Перекажіть USDT (TON) на вказаний гаманець та підтвердьте платіж за допомогою вашого Гаманця або Хешу транзакції.",
                 label_amount: "Гаманець для поповнення (USDT TON):",
                 btn_pay: "Підтвердити поповнення",
-                min_error: "⚠️ Введіть адресу гаманця або хеш транзакції",
                 nav_lbl_camp: "Прогрес",
                 nav_lbl_create: "Замовлення",
                 nav_lbl_dep: "Поповнення",
@@ -455,29 +492,24 @@
                 paying: "⏳ Перевірка транзакції...",
                 status_done: "Виконано",
                 status_active: "Активне",
-                btn_cancel: "Завершити та повернути кошти",
                 support_hint: "Виникли питання чи проблеми з платежем?",
                 support_btn: "💬 Написати в підтримку"
             },
             en: {
                 nav_campaigns: "My Campaigns",
-                campaigns_desc: "Here is the status of your ordered tasks for post likes.",
+                campaigns_desc: "Here is the status of your ordered tasks and user submissions.",
                 no_campaigns: "You don't have any active campaigns yet",
                 balance_title: "My Advertiser Balance",
                 go_deposit: "⚡️ TOP UP BALANCE",
                 create_title: "Create New Task",
-                create_hint: "Tasks are for post likes (reactions).",
-                label_link: "Link to Telegram post:",
+                create_hint: "Invite users to your bot or game via referral link.",
+                label_link: "Task Link (Bot/Game):",
                 pkg_size: "Package Volume:",
-                pkg_value: "20 views",
                 pkg_cost: "Package Cost:",
-                btn_submit: "Launch Campaign (0.03 USDT)",
-                btn_submit_free: "Launch Free (0.00 USDT)",
                 deposit_title: "Automatic Deposit",
                 deposit_desc: "Transfer USDT (TON) to the wallet address below and confirm using your Wallet Address or Transaction Hash.",
                 label_amount: "Deposit Wallet (USDT TON):",
                 btn_pay: "Confirm Deposit",
-                min_error: "⚠️ Please enter a wallet address or transaction hash",
                 nav_lbl_camp: "Progress",
                 nav_lbl_create: "Order",
                 nav_lbl_dep: "Deposit",
@@ -489,29 +521,24 @@
                 paying: "⏳ Verifying transaction...",
                 status_done: "Done",
                 status_active: "Active",
-                btn_cancel: "Finish & Refund",
                 support_hint: "Have questions or payment issues?",
                 support_btn: "💬 Contact Support"
             },
             ru: {
                 nav_campaigns: "Мои кампании",
-                campaigns_desc: "Здесь отображается статус ваших заказанных заданий на лайки к постам.",
+                campaigns_desc: "Здесь отображается статус ваших заказанных заданий и отчеты пользователей.",
                 no_campaigns: "У вас еще нет созданных кампаний",
                 balance_title: "Мой Баланс рекламодателя",
                 go_deposit: "⚡️ ПОПОЛНИТЬ СЧЕТ",
                 create_title: "Создать новое задание",
-                create_hint: "Задания предназначены для лайков (реакций) на посты.",
-                label_link: "Ссылка на пост Telegram:",
+                create_hint: "Пригласите пользователей в свой бот или игру по реферальной ссылке.",
+                label_link: "Ссылка на задание (Бот/Игра):",
                 pkg_size: "Объем пакета:",
-                pkg_value: "20 выполнений",
                 pkg_cost: "Стоимость пакета:",
-                btn_submit: "Запустить кампанію (0.03 USDT)",
-                btn_submit_free: "Запустить бесплатно (0.00 USDT)",
                 deposit_title: "Автоматическое пополнение",
                 deposit_desc: "Переведите USDT (TON) на указанный кошелек и подтвердите платеж с помощью вашего Кошелька или Хэша транзакции.",
                 label_amount: "Кошелек для пополнения (USDT TON):",
                 btn_pay: "Подтвердить пополнение",
-                min_error: "⚠️ Введите адрес кошелька или хэш транзакции",
                 nav_lbl_camp: "Progress",
                 nav_lbl_create: "Заказ",
                 nav_lbl_dep: "Пополнение",
@@ -523,11 +550,45 @@
                 paying: "⏳ Проверка транзакции...",
                 status_done: "Выполнено",
                 status_active: "Активно",
-                btn_cancel: "Завершить и вернуть средства",
                 support_hint: "Возникли вопросы или проблемы с платежем?",
                 support_btn: "💬 Написать в поддержку"
             }
         };
+
+        function selectTaskType(type) {
+            selectedTaskType = type;
+            document.getElementById('type-reaction').className = type === 'reaction' ? 'task-type-btn active-task' : 'task-type-btn';
+            document.getElementById('type-referral').className = type === 'referral' ? 'task-type-btn active-task' : 'task-type-btn';
+            
+            const pkgSection = document.getElementById('referral-packages-section');
+            if (type === 'referral') {
+                pkgSection.style.display = 'block';
+                updatePackageUI();
+            } else {
+                pkgSection.style.display = 'none';
+                selectedPackageSize = 20;
+                selectedPackageCost = 0.03;
+                document.getElementById('txt-pkg-value').innerText = "20 виконань";
+                document.getElementById('txt-pkg-cost-val').innerText = "0.03 USDT";
+            }
+            updateButtonsUI();
+        }
+
+        function selectPackage(size, cost, el) {
+            selectedPackageSize = size;
+            selectedPackageCost = cost;
+            document.querySelectorAll('.pkg-btn').forEach(b => b.classList.remove('selected'));
+            el.classList.add('selected');
+            updatePackageUI();
+        }
+
+        function updatePackageUI() {
+            if (selectedTaskType === 'referral') {
+                document.getElementById('txt-pkg-value').innerText = `${selectedPackageSize} рефералів`;
+                document.getElementById('txt-pkg-cost-val').innerText = `${selectedPackageCost.toFixed(2)} USDT`;
+            }
+            updateButtonsUI();
+        }
 
         function openLangModal() { document.getElementById('lang-modal').classList.add('active'); }
         function closeLangModal() { document.getElementById('lang-modal').classList.remove('active'); }
@@ -565,7 +626,6 @@
             document.getElementById('txt-create-hint').innerText = t.create_hint;
             document.getElementById('txt-label-link').innerText = t.label_link;
             document.getElementById('txt-pkg-size').innerText = t.pkg_size;
-            document.getElementById('txt-pkg-value').innerText = t.pkg_value;
             document.getElementById('txt-pkg-cost').innerText = t.pkg_cost;
             document.getElementById('txt-deposit-title').innerText = t.deposit_title;
             document.getElementById('txt-deposit-desc').innerText = t.deposit_desc;
@@ -582,20 +642,9 @@
         }
 
         function updateButtonsUI() {
-            const t = translations[currentLang];
             const btnSubmit = document.getElementById('btn-submit-task');
-            if (userId === "6043278492") {
-                btnSubmit.innerText = t.btn_submit_free;
-            } else {
-                btnSubmit.innerText = t.btn_submit;
-            }
-
-            const btnVerify = document.getElementById('btn-verify-deposit');
-            if (!btnVerify.disabled && btnVerify.innerText.includes('⏳')) {
-                btnVerify.innerText = t.paying;
-            } else {
-                btnVerify.innerText = t.btn_pay;
-            }
+            let costStr = (userId === "6043278492") ? "0.00 USDT" : `${selectedPackageCost.toFixed(2)} USDT`;
+            btnSubmit.innerText = (currentLang === 'uk') ? `Запустити кампанію (${costStr})` : `Launch Campaign (${costStr})`;
         }
 
         function switchTab(tabName, element) {
@@ -609,7 +658,7 @@
 
         function switchTabDirect(tabName) {
             const navEl = document.getElementById('nav-' + tabName);
-            if (navEl) switchTab(tabName, navEl);
+            if (navEl) switchTab(navEl, navEl);
         }
 
         async function loadMasterWalletInfo() {
@@ -617,13 +666,8 @@
                 const response = await fetch('/api/prepare-deposit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: userId,
-                        initData: window.Telegram.WebApp.initData,
-                        amount: 0.6
-                    })
+                    body: JSON.stringify({ userId: userId, initData: window.Telegram.WebApp.initData, amount: 0.6 })
                 });
-
                 if (response.ok) {
                     const data = await response.json();
                     if (data.depositInfo && data.depositInfo.masterWallet) {
@@ -638,13 +682,8 @@
         function copyWalletAddress() {
             const walletInput = document.getElementById('master-wallet-address');
             if (!walletInput.value || walletInput.value.includes('Завантаження')) return;
-
             navigator.clipboard.writeText(walletInput.value).then(() => {
                 alert("Адресу гаманця успішно скопійовано!");
-            }).catch(() => {
-                walletInput.select();
-                document.execCommand('copy');
-                alert("Адресу скопійовано!");
             });
         }
 
@@ -654,7 +693,6 @@
                 alert("Будь ласка, введіть адресу вашого гаманця або хеш транзакції.");
                 return;
             }
-
             const t = translations[currentLang];
             const btnVerify = document.getElementById('btn-verify-deposit');
             btnVerify.disabled = true;
@@ -664,15 +702,9 @@
                 const response = await fetch('/api/deposit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: userId,
-                        initData: window.Telegram.WebApp.initData,
-                        transactionHash: hashInput
-                    })
+                    body: JSON.stringify({ userId: userId, initData: window.Telegram.WebApp.initData, transactionHash: hashInput })
                 });
-
                 const data = await response.json();
-
                 if (response.ok && data.success) {
                     balance = data.newBalance;
                     document.getElementById('adv-balance').innerText = balance.toFixed(4);
@@ -680,7 +712,7 @@
                     alert("🎉 Успішно! Баланс поповнено.");
                     switchTabDirect('create');
                 } else {
-                    alert("❌ Помилка перевірки: " + (data.error || "Транзакцію або гаманець не знайдено"));
+                    alert("❌ Помилка перевірки: " + (data.error || "Транзакцію не знайдено"));
                 }
             } catch (err) {
                 alert("Помилка зв'язку з сервером.");
@@ -706,7 +738,9 @@
                     body: JSON.stringify({
                         userId: userId,
                         initData: window.Telegram.WebApp.initData,
-                        taskLink: taskLink
+                        taskLink: taskLink,
+                        taskType: selectedTaskType,
+                        packageSize: selectedPackageSize
                     })
                 });
 
@@ -719,7 +753,7 @@
                 } else {
                     if (response.status === 409 || data.error === "duplicate_link") {
                         alert(t.err_duplicate);
-                    } else if (data.error === "Insufficient balance. Need 0.03 USDT" || data.error?.includes("balance")) {
+                    } else if (data.error?.includes("Insufficient balance")) {
                         alert(t.err_balance);
                     } else {
                         alert(data.error || t.err_server);
@@ -730,46 +764,38 @@
             }
         }
 
-        async function cancelCampaign(campId) {
-            const t = translations[currentLang];
-            if (!confirm("Завершити завдання достроково та повернути кошти за невиконані перегляди?")) return;
-
+        async function moderateSubmission(taskId, submissionId, action) {
             try {
-                const response = await fetch('/api/cancel-task', {
+                const response = await fetch('/api/moderate-task', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: userId,
                         initData: window.Telegram.WebApp.initData,
-                        campaignId: campId
+                        taskId: taskId,
+                        submissionId: submissionId,
+                        action: action
                     })
                 });
-
                 const data = await response.json();
                 if (response.ok && data.success) {
-                    alert("Кампанію успішно завершено, кошти повернено на баланс!");
                     fetchAdvertiserData();
                 } else {
-                    alert(data.error || t.err_server);
+                    alert(data.error || "Помилка модерації");
                 }
             } catch (e) {
-                alert(t.err_server);
+                alert("Помилка зв'язку з сервером");
             }
         }
 
         async function fetchAdvertiserData() {
-            if (!window.Telegram.WebApp.initData) {
-                return;
-            }
+            if (!window.Telegram.WebApp.initData) return;
 
             try {
                 const response = await fetch('/api/user', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: userId,
-                        initData: window.Telegram.WebApp.initData
-                    })
+                    body: JSON.stringify({ userId: userId, initData: window.Telegram.WebApp.initData })
                 });
 
                 if (!response.ok) return;
@@ -785,34 +811,41 @@
                     if (campaigns && Object.keys(campaigns).length > 0) {
                         listDiv.innerHTML = "";
                         const t = translations[currentLang];
-                        const now = Date.now();
                         let activeCount = 0;
 
                         Object.entries(campaigns).forEach(([campId, camp]) => {
-                            let currentViews = camp.current_views || 0;
+                            let current = camp.current_views || camp.current_count || 0;
+                            let target = camp.ordered_views || camp.target_count || 20;
                             
-                            if (currentViews >= 20) return;
-
                             activeCount++;
-                            
-                            let createdAt = camp.created_at ? new Date(camp.created_at).getTime() : 0;
-                            let hoursPassed = (now - createdAt) / (1000 * 60 * 60);
-                            let showCancelBtn = createdAt > 0 && hoursPassed >= 24;
 
-                            let cancelBtnHtml = showCancelBtn ? `
-                                <button class="btn" style="background:transparent; border:1px solid #ff4444; color:#ff4444; font-size:11px; padding:6px; margin-top:8px; box-shadow:none;" onclick="cancelCampaign('${campId}')">
-                                    ${t.btn_cancel}
-                                </button>
-                            ` : '';
+                            // Рендеримо сабміти зі скріншотами (якщо це реферальне завдання)
+                            let submissionsHtml = '';
+                            if (camp.submissions) {
+                                Object.entries(camp.submissions).forEach(([subId, sub]) => {
+                                    if (sub.status === 'pending') {
+                                        submissionsHtml += `
+                                            <div class="submission-card">
+                                                <div style="font-size:11px; margin-bottom:5px;">👤 Виконавець ID: ${sub.userId}</div>
+                                                <a href="${sub.screenshotUrl}" target="_blank" style="color:var(--neon-aqua); font-size:12px; display:block; margin-bottom:8px;">🖼 Переглянути скріншот</a>
+                                                <div style="display:flex; gap:6px;">
+                                                    <button class="btn" style="margin:0; padding:6px; font-size:12px; background:#00b09b; color:#fff;" onclick="moderateSubmission('${campId}', '${subId}', 'approve')">✅ Прийняти</button>
+                                                    <button class="btn" style="margin:0; padding:6px; font-size:12px; background:#ff4444; color:#fff; box-shadow:none;" onclick="moderateSubmission('${campId}', '${subId}', 'reject')">❌ Відхилити</button>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }
+                                });
+                            }
 
                             listDiv.innerHTML += `
                                 <div class="campaign-item">
                                     <div style="font-size:12px; color:var(--neon-aqua); word-break:break-all;">🔗 ${camp.link}</div>
                                     <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:6px;">
-                                        <span>Статус: <b>${t.status_active}</b></span>
-                                        <span>Прогрес: <b style="color:#ff9f1c">${currentViews} / 20</b></span>
+                                        <span>Тип: <b>${camp.type || 'reaction'}</b></span>
+                                        <span>Прогрес: <b style="color:#ff9f1c">${current} / ${target}</b></span>
                                     </div>
-                                    ${cancelBtnHtml}
+                                    ${submissionsHtml}
                                 </div>
                             `;
                         });
@@ -831,6 +864,7 @@
 
         async function startApp() {
             initLanguage();
+            selectTaskType('referral'); // Встановлюємо реферали за замовчуванням
             setTimeout(async () => {
                 await fetchAdvertiserData();
             }, 300);
