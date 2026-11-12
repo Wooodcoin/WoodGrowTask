@@ -1,3 +1,5 @@
+// api/create-task.js
+
 import admin from 'firebase-admin';
 
 if (!admin.apps.length) {
@@ -20,7 +22,7 @@ const SUPER_ADMIN_ID = "6043278492"; // Твій Telegram ID
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    const { userId, initData, taskLink } = req.body;
+    const { userId, initData, taskLink, taskType, packageSize } = req.body;
 
     if (!userId || !initData || !taskLink) {
         return res.status(400).json({ error: 'Missing parameters' });
@@ -62,6 +64,28 @@ export default async function handler(req, res) {
         const advRef = db.ref(`task_users/${userId}`);
         
         let currentBalance = 0;
+        let taskCost = 0;
+        let targetCount = 0;
+        let rewardPerUnit = 0;
+        let isReferral = (taskType === 'referral');
+
+        if (isReferral) {
+            const allowedPackages = [5, 10, 20];
+            const size = parseInt(packageSize) || 5;
+
+            if (!allowedPackages.includes(size)) {
+                return res.status(400).json({ error: 'Invalid package size. Allowed: 5, 10, 20' });
+            }
+
+            targetCount = size;                    // 5, 10 або 20 рефералів
+            rewardPerUnit = 0.002;                 // Винагорода виконавцю за 1 реферала
+            taskCost = size * 0.004;               // Вартість для замовника (0.02, 0.04 або 0.08 USDT)
+        } else {
+            // Стандартні реакції на пости
+            targetCount = 20;
+            rewardPerUnit = 0.0005;
+            taskCost = 0.03;
+        }
 
         if (!isSuperAdmin) {
             // Перевіряємо баланс звичайного рекламодавця
@@ -70,16 +94,16 @@ export default async function handler(req, res) {
             
             currentBalance = parseFloat(advSnapshot.val().balance) || 0;
 
-            if (currentBalance < 0.03) {
-                return res.status(400).json({ error: 'Insufficient balance. Need 0.03 USDT' });
+            if (currentBalance < taskCost) {
+                return res.status(400).json({ error: `Insufficient balance. Need ${taskCost.toFixed(4)} USDT` });
             }
 
-            // Списуємо вартість пакету (0.03 USDT)
-            const newBalance = currentBalance - 0.03;
+            // Списуємо вартість пакету з балансу
+            const newBalance = currentBalance - taskCost;
             await advRef.update({ balance: newBalance });
         }
 
-        // 2. Додаємо завдання у загальну гілку для основної апки користувачів "tasks"
+        // 2. Додаємо завдання у загальну гілку для основної апки "tasks"
         const globalTasksRef = db.ref('tasks').push();
         const taskId = globalTasksRef.key;
         const timestamp = new Date().toISOString();
@@ -88,9 +112,10 @@ export default async function handler(req, res) {
             id: taskId,
             creatorId: userId,
             link: taskLink,
-            reward: 0.0005,         // Скільки отримає звичайний користувач за 1 лайк
-            required_views: 26,     // Ліміт 20 + 6 штук захисного запасу для абузерів
-            current_views: 0,
+            type: isReferral ? 'referral' : 'reaction',
+            reward: rewardPerUnit,                  
+            target_count: targetCount,     
+            current_count: 0,
             status: "active",
             createdAt: timestamp
         };
@@ -101,13 +126,15 @@ export default async function handler(req, res) {
         await db.ref(`task_users/${userId}/my_campaigns/${taskId}`).set({
             id: taskId,
             link: taskLink,
-            ordered_views: 20,      // Замовник бачить чисті 20
-            created_at: timestamp   // Зберігаємо дату створення для перевірки 24 годин
+            type: isReferral ? 'referral' : 'reaction',
+            ordered_views: targetCount,      
+            current_views: 0,
+            created_at: timestamp   
         });
 
         return res.status(200).json({
             success: true,
-            message: isSuperAdmin ? 'Task created for free (Admin mode)' : 'Task created successfully, 0.03 USDT debited',
+            message: isSuperAdmin ? 'Task created for free (Admin mode)' : `Task created successfully, ${taskCost.toFixed(4)} USDT debited`,
             taskId: taskId
         });
 
