@@ -20,12 +20,13 @@ const db = admin.database();
 const CRON_SECRET = "Super5891referal7071tokeN";
 
 export default async function handler(req, res) {
-    // Дозволяємо GET або POST запити для зручності виклику з cron-job.org
     const secret = req.query.secret || req.body?.secret;
 
     if (secret !== CRON_SECRET) {
         return res.status(403).json({ error: 'Unauthorized: Invalid secret token' });
     }
+
+    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
     try {
         const now = Date.now();
@@ -61,15 +62,18 @@ export default async function handler(req, res) {
                         moderatedAt: now
                     });
 
-                    // 2. Збільшуємо лічильник виконаних завдань у кампанії
+                    // 2. Збільшуємо лічильники виконаних завдань у кампанії
                     const taskRef = db.ref(`tasks/${taskId}`);
                     const taskSnap = await taskRef.once('value');
                     if (taskSnap.exists()) {
                         const taskData = taskSnap.val();
-                        const newCount = (taskData.current_count || 0) + 1;
+                        const newCount = (parseInt(taskData.current_count || taskData.current_views || 0)) + 1;
                         
                         await taskRef.update({ current_count: newCount });
-                        await db.ref(`task_users/${creatorId}/my_campaigns/${taskId}`).update({ current_views: newCount });
+                        await db.ref(`task_users/${creatorId}/my_campaigns/${taskId}`).update({ 
+                            current_views: newCount, 
+                            current_count: newCount 
+                        });
                     }
 
                     // 3. Нараховуємо винагороду виконавцю
@@ -82,6 +86,22 @@ export default async function handler(req, res) {
                     }
 
                     await executorRef.update({ balance: currentExecutorBalance + rewardAmount });
+
+                    // 4. Сповіщаємо виконавця в Telegram про автоматичне схвалення
+                    if (BOT_TOKEN) {
+                        try {
+                            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    chat_id: executorUserId,
+                                    text: `⚡️ Ваш звіт по завданню було автоматично схвалено системою (минуло 48 годин).\nВам нараховано +${rewardAmount} USDT.`
+                                })
+                            });
+                        } catch (tgErr) {
+                            console.error("Failed to send auto-approval notification to user:", tgErr);
+                        }
+                    }
 
                     approvedCount++;
                 }
