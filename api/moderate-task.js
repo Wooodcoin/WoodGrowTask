@@ -21,7 +21,7 @@ const db = admin.database();
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    const { userId, initData, taskId, submissionId, action, rejectReason } = req.body; // action: 'approve' або 'reject'
+    const { userId, initData, taskId, submissionId, action, reason } = req.body; // action: 'approve' або 'reject'
 
     if (!userId || !initData || !taskId || !submissionId || !action) {
         return res.status(400).json({ error: 'Missing parameters' });
@@ -49,7 +49,6 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Отримуємо сабміт з бази
         const subRef = db.ref(`task_submissions/${taskId}/${submissionId}`);
         const subSnap = await subRef.once('value');
 
@@ -59,12 +58,10 @@ export default async function handler(req, res) {
 
         const submission = subSnap.val();
 
-        // Перевіряємо чи саме цей рекламодавець є власником завдання
         if (submission.creatorId.toString() !== userId.toString()) {
             return res.status(403).json({ error: 'Unauthorized: You are not the owner of this task' });
         }
 
-        // Перевіряємо чи сабміт ще не був оброблений
         if (submission.status !== 'pending') {
             return res.status(400).json({ error: `Submission is already ${submission.status}` });
         }
@@ -73,22 +70,19 @@ export default async function handler(req, res) {
         const timestamp = Date.now();
 
         if (action === 'approve') {
-            // Оновлюємо статус сабміту на approved у глобальній гілці та кабінеті рекламодавця
             await subRef.update({ status: 'approved', moderatedAt: timestamp });
             await db.ref(`task_users/${userId}/my_campaigns/${taskId}/submissions/${submissionId}`).update({ status: 'approved', moderatedAt: timestamp });
 
-            // Збільшуємо лічильник виконаних завдань у кампанії (глобально і в кабінеті)
             const taskRef = db.ref(`tasks/${taskId}`);
             const taskSnap = await taskRef.once('value');
             if (taskSnap.exists()) {
                 const taskData = taskSnap.val();
-                const newCount = (taskData.current_count || 0) + 1;
+                const newCount = (parseInt(taskData.current_count || taskData.current_views || 0)) + 1;
                 
                 await taskRef.update({ current_count: newCount });
-                await db.ref(`task_users/${userId}/my_campaigns/${taskId}`).update({ current_views: newCount });
+                await db.ref(`task_users/${userId}/my_campaigns/${taskId}`).update({ current_views: newCount, current_count: newCount });
             }
 
-            // Нараховуємо винагороду виконавцю (0.002 USDT)
             const executorRef = db.ref(`task_users/${executorUserId}`);
             const executorSnap = await executorRef.once('value');
             
@@ -100,8 +94,21 @@ export default async function handler(req, res) {
             const rewardAmount = 0.002;
             const newExecutorBalance = currentExecutorBalance + rewardAmount;
 
-            // Оновлюємо баланс виконавця
             await executorRef.update({ balance: newExecutorBalance });
+
+            // Повідомлення виконавцю про успішне схвалення
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: executorUserId,
+                        text: `✅ Ваш звіт по завданню успішно схвалено! Ви отримали +${rewardAmount} USDT.`
+                    })
+                });
+            } catch (tgErr) {
+                console.error("Failed to send approval notification to user:", tgErr);
+            }
 
             return res.status(200).json({
                 success: true,
@@ -109,11 +116,24 @@ export default async function handler(req, res) {
             });
 
         } else if (action === 'reject') {
-            const reason = rejectReason || 'Завдання виконано некоректно';
+            const rejectReasonText = reason || 'Завдання виконано некоректно';
 
-            // Оновлюємо статус на rejected
-            await subRef.update({ status: 'rejected', rejectReason: reason, moderatedAt: timestamp });
-            await db.ref(`task_users/${userId}/my_campaigns/${taskId}/submissions/${submissionId}`).update({ status: 'rejected', rejectReason: reason, moderatedAt: timestamp });
+            await subRef.update({ status: 'rejected', rejectReason: rejectReasonText, moderatedAt: timestamp });
+            await db.ref(`task_users/${userId}/my_campaigns/${taskId}/submissions/${submissionId}`).update({ status: 'rejected', rejectReason: rejectReasonText, moderatedAt: timestamp });
+
+            // Сповіщення виконавцю про відхилення з причиною
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: executorUserId,
+                        text: `❌ Ваш звіт по завданню було відхилено.\nПричина: ${rejectReasonText}`
+                    })
+                });
+            } catch (tgErr) {
+                console.error("Failed to send rejection notification to user:", tgErr);
+            }
 
             return res.status(200).json({
                 success: true,
