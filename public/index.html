@@ -109,7 +109,6 @@
             border: 1px solid #2a353a;
         }
 
-        /* Стилі меню вибору завдань */
         .task-types-container {
             background: rgba(0, 0, 0, 0.4);
             border: 1.5px solid rgba(255, 191, 105, 0.3);
@@ -163,7 +162,6 @@
         .badge-active { background: rgba(0, 0, 0, 0.2); color: #fff; }
         .badge-dev { background: rgba(0, 0, 0, 0.5); color: #ffbf69; border: 1px solid rgba(255, 191, 105, 0.3); }
 
-        /* Пакетні кнопки */
         .packages-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -320,7 +318,7 @@
 
     <div class="container">
         
-        <!-- Вкладка: Мої кампанії (Прогрес) -->
+        <!-- Вкладка: Прогрес завдань -->
         <div id="tab-campaigns" class="tab-content active">
             <div class="card">
                 <h3 id="txt-nav-campaigns">Прогрес завдань</h3>
@@ -342,7 +340,6 @@
             <div class="card" style="text-align: left;">
                 <h3 style="text-align: center;" id="txt-create-title">Створити нове завдання</h3>
                 
-                <!-- Меню вибору типів завдань -->
                 <div class="task-types-container" style="margin-top: 15px;">
                     <div class="section-header-title">🎯 Види завдань</div>
                     
@@ -367,7 +364,6 @@
                 <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на завдання (Бот/Гра/Пост):</label>
                 <input type="url" class="input-field" id="task-url" placeholder="https://t.me/your_bot?start=ref">
                 
-                <!-- Вибір пакету (тільки для рефералів) -->
                 <div id="referral-packages-section">
                     <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-top: 12px; display: block;">Оберіть пакет рефералів:</label>
                     <div class="packages-grid">
@@ -427,6 +423,17 @@
 
     </div>
 
+    <!-- Модальне вікно вибору причини відхилення -->
+    <div class="modal-overlay" id="reject-modal">
+        <div class="modal-window">
+            <h3>❌ Причина відхилення</h3>
+            <p style="font-size: 13px; color: #8b9e9f; margin-bottom: 15px;">Оберіть причину, чому звіт відхилено:</p>
+            <button class="btn" style="background: rgba(0,0,0,0.6); border: 1.5px solid var(--neon-aqua); color: #fff; margin-bottom: 8px;" onclick="confirmRejectReason('Не видно, що бот запущений')">Не видно, що бот запущений</button>
+            <button class="btn" style="background: rgba(0,0,0,0.6); border: 1.5px solid #ff4444; color: #fff; margin-bottom: 15px;" onclick="confirmRejectReason('Скріншот не той що потрібно')">Скріншот не той що потрібно</button>
+            <button class="btn" style="background: transparent; border: 1px solid #4a555a; color: #8b9e9f; box-shadow: none;" onclick="closeRejectModal()">Скасувати</button>
+        </div>
+    </div>
+
     <!-- Модальне вікно мови -->
     <div class="modal-overlay" id="lang-modal">
         <div class="modal-window">
@@ -464,6 +471,8 @@
         let selectedTaskType = 'referral';
         let selectedPackageSize = 5;
         let selectedPackageCost = 0.02;
+
+        let pendingRejectData = { taskId: null, submissionId: null };
 
         const translations = {
             uk: {
@@ -764,7 +773,52 @@
             }
         }
 
+        // Відкриття модального вікна вибору причини відхилення
+        function openRejectModal(taskId, submissionId) {
+            pendingRejectData = { taskId, submissionId };
+            document.getElementById('reject-modal').classList.add('active');
+        }
+
+        function closeRejectModal() {
+            document.getElementById('reject-modal').classList.remove('active');
+            pendingRejectData = { taskId: null, submissionId: null };
+        }
+
+        async function confirmRejectReason(reason) {
+            const { taskId, submissionId } = pendingRejectData;
+            if (!taskId || !submissionId) return;
+            closeRejectModal();
+
+            try {
+                const response = await fetch('/api/moderate-task', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        initData: window.Telegram.WebApp.initData,
+                        taskId: taskId,
+                        submissionId: submissionId,
+                        action: 'reject',
+                        reason: reason
+                    })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    fetchAdvertiserData();
+                } else {
+                    alert(data.error || "Помилка модерації");
+                }
+            } catch (e) {
+                alert("Помилка зв'язку з сервером");
+            }
+        }
+
         async function moderateSubmission(taskId, submissionId, action) {
+            if (action === 'reject') {
+                openRejectModal(taskId, submissionId);
+                return;
+            }
+
             try {
                 const response = await fetch('/api/moderate-task', {
                     method: 'POST',
@@ -816,12 +870,10 @@
                             let current = parseInt(camp.current_views || camp.current_count || 0);
                             let target = parseInt(camp.ordered_views || camp.target_count || 20);
                             
-                            // ФІЛЬТРАЦІЯ: Показуємо завдання лише якщо воно ще не виконане (current < target)
                             if (current >= target) return;
                             
                             activeCount++;
 
-                            // Рендеримо сабміти зі скріншотами (для рефералів)
                             let submissionsHtml = '';
                             if (camp.submissions) {
                                 Object.entries(camp.submissions).forEach(([subId, sub]) => {
