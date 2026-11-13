@@ -320,13 +320,13 @@
 
     <div class="container">
         
-        <!-- Вкладка: Мої кампанії -->
+        <!-- Вкладка: Мої кампанії (Прогрес) -->
         <div id="tab-campaigns" class="tab-content active">
             <div class="card">
-                <h3 id="txt-nav-campaigns">Мої кампанії</h3>
-                <p style="color: #8b9e9f; font-size: 13px;" id="txt-campaigns-desc">Тут відображається статус ваших замовлених завдань та звіти користувачів.</p>
+                <h3 id="txt-nav-campaigns">Прогрес завдань</h3>
+                <p style="color: #8b9e9f; font-size: 13px;" id="txt-campaigns-desc">Тут відображається статус ваших активних завдань та звіти користувачів.</p>
                 <div id="campaigns-list">
-                    <p style="color: #4a555a; font-style: italic;" id="txt-no-campaigns">У вас ще немає створених кампаній</p>
+                    <p style="color: #4a555a; font-style: italic;" id="txt-no-campaigns">У вас немає активних кампаній</p>
                 </div>
             </div>
         </div>
@@ -461,15 +461,15 @@
 
         let balance = 0.0000;
         let currentLang = 'en';
-        let selectedTaskType = 'referral'; // За замовчуванням реферали
+        let selectedTaskType = 'referral';
         let selectedPackageSize = 5;
         let selectedPackageCost = 0.02;
 
         const translations = {
             uk: {
-                nav_campaigns: "Мої кампанії",
-                campaigns_desc: "Тут відображається статус ваших замовлених завдань та звіти користувачів.",
-                no_campaigns: "У вас ще немає створених кампаній",
+                nav_campaigns: "Прогрес завдань",
+                campaigns_desc: "Тут відображається статус ваших активних завдань та звіти користувачів.",
+                no_campaigns: "У вас немає активних кампаній",
                 balance_title: "Мій Баланс рекламодавця",
                 go_deposit: "⚡️ ПОПОЛНИТИ РАХУНОК",
                 create_title: "Створити нове завдання",
@@ -496,9 +496,9 @@
                 support_btn: "💬 Написати в підтримку"
             },
             en: {
-                nav_campaigns: "My Campaigns",
-                campaigns_desc: "Here is the status of your ordered tasks and user submissions.",
-                no_campaigns: "You don't have any active campaigns yet",
+                nav_campaigns: "Task Progress",
+                campaigns_desc: "Here is the status of your active tasks and user submissions.",
+                no_campaigns: "You don't have any active campaigns",
                 balance_title: "My Advertiser Balance",
                 go_deposit: "⚡️ TOP UP BALANCE",
                 create_title: "Create New Task",
@@ -525,9 +525,9 @@
                 support_btn: "💬 Contact Support"
             },
             ru: {
-                nav_campaigns: "Мои кампании",
-                campaigns_desc: "Здесь отображается статус ваших заказанных заданий и отчеты пользователей.",
-                no_campaigns: "У вас еще нет созданных кампаний",
+                nav_campaigns: "Прогресс заданий",
+                campaigns_desc: "Здесь отображается статус ваших активных заданий и отчеты пользователей.",
+                no_campaigns: "У вас нет активных кампаний",
                 balance_title: "Мой Баланс рекламодателя",
                 go_deposit: "⚡️ ПОПОЛНИТЬ СЧЕТ",
                 create_title: "Создать новое задание",
@@ -810,16 +810,18 @@
                     
                     if (campaigns && Object.keys(campaigns).length > 0) {
                         listDiv.innerHTML = "";
-                        const t = translations[currentLang];
                         let activeCount = 0;
 
                         Object.entries(campaigns).forEach(([campId, camp]) => {
-                            let current = camp.current_views || camp.current_count || 0;
-                            let target = camp.ordered_views || camp.target_count || 20;
+                            let current = parseInt(camp.current_views || camp.current_count || 0);
+                            let target = parseInt(camp.ordered_views || camp.target_count || 20);
+                            
+                            // ФІЛЬТРАЦІЯ: Показуємо завдання лише якщо воно ще не виконане (current < target)
+                            if (current >= target) return;
                             
                             activeCount++;
 
-                            // Рендеримо сабміти зі скріншотами (якщо це реферальне завдання)
+                            // Рендеримо сабміти зі скріншотами (для рефералів)
                             let submissionsHtml = '';
                             if (camp.submissions) {
                                 Object.entries(camp.submissions).forEach(([subId, sub]) => {
@@ -827,7 +829,7 @@
                                         submissionsHtml += `
                                             <div class="submission-card">
                                                 <div style="font-size:11px; margin-bottom:5px;">👤 Виконавець ID: ${sub.userId}</div>
-                                                <a href="${sub.screenshotUrl}" target="_blank" style="color:var(--neon-aqua); font-size:12px; display:block; margin-bottom:8px;">🖼 Переглянути скріншот</a>
+                                                <div style="font-size:11px; color:#ffbf69; margin-bottom:6px;">📸 Скріншот надіслано в особистий чат бота</div>
                                                 <div style="display:flex; gap:6px;">
                                                     <button class="btn" style="margin:0; padding:6px; font-size:12px; background:#00b09b; color:#fff;" onclick="moderateSubmission('${campId}', '${subId}', 'approve')">✅ Прийняти</button>
                                                     <button class="btn" style="margin:0; padding:6px; font-size:12px; background:#ff4444; color:#fff; box-shadow:none;" onclick="moderateSubmission('${campId}', '${subId}', 'reject')">❌ Відхилити</button>
@@ -851,10 +853,10 @@
                         });
 
                         if (activeCount === 0) {
-                            listDiv.innerHTML = `<p style="color: #4a555a; font-style: italic;">У вас ще немає активних кампаній</p>`;
+                            listDiv.innerHTML = `<p style="color: #4a555a; font-style: italic;">У вас немає активних кампаній</p>`;
                         }
                     } else {
-                        document.getElementById('txt-no-campaigns').style.display = 'block';
+                        document.getElementById('campaigns-list').innerHTML = `<p style="color: #4a555a; font-style: italic;">У вас немає активних кампаній</p>`;
                     }
                 }
             } catch (e) {
@@ -864,7 +866,7 @@
 
         async function startApp() {
             initLanguage();
-            selectTaskType('referral'); // Встановлюємо реферали за замовчуванням
+            selectTaskType('referral');
             setTimeout(async () => {
                 await fetchAdvertiserData();
             }, 300);
