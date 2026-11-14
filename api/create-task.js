@@ -24,7 +24,7 @@ export default async function handler(req, res) {
 
     const { userId, initData, taskLink, taskType, packageSize } = req.body;
 
-    if (!userId || !initData || !taskLink) {
+    if (!userId || !initData || !taskLink || !taskType) {
         return res.status(400).json({ error: 'Missing parameters' });
     }
 
@@ -67,23 +67,41 @@ export default async function handler(req, res) {
         let taskCost = 0;
         let targetCount = 0;
         let rewardPerUnit = 0;
-        let isReferral = (taskType === 'referral');
+        let pricePerUser = 0;
 
-        if (isReferral) {
+        if (taskType === 'referral') {
             const allowedPackages = [5, 10, 20];
             const size = parseInt(packageSize) || 5;
 
             if (!allowedPackages.includes(size)) {
-                return res.status(400).json({ error: 'Invalid package size. Allowed: 5, 10, 20' });
+                return res.status(400).json({ error: 'Invalid package size. Allowed for referral: 5, 10, 20' });
             }
 
-            targetCount = size;                    // 5, 10 або 20 рефералів
-            rewardPerUnit = 0.002;                 // Винагорода виконавцю за 1 реферала
-            taskCost = size * 0.004;               // Вартість для замовника (0.02, 0.04 або 0.08 USDT)
-        } else {
+            targetCount = size;                    
+            rewardPerUnit = 0.002;                 
+            taskCost = size * 0.004;               
+        } 
+        else if (taskType === 'telegram_subscription') {
+            // Пакет підписок на Telegram-канали
+            const size = parseInt(packageSize);
+            
+            // Звичайним користувачам доступні 20, 50, 100. Адміну — також 5000.
+            const allowedPackages = isSuperAdmin ? [20, 50, 100, 5000] : [20, 50, 100];
+
+            if (!allowedPackages.includes(size)) {
+                return res.status(400).json({ error: `Invalid package size. Allowed: ${allowedPackages.join(', ')}` });
+            }
+
+            targetCount = size;
+            rewardPerUnit = 0.001;                 // Винагорода виконавцю за 1 підписку
+            pricePerUser = 0.0018;                 // Ціна за 1 підписку для рекламодавця
+            taskCost = size * pricePerUser;        // Загальна вартість (0.036, 0.09, 0.18 або 9.00 USDT)
+        } 
+        else {
             // Стандартні реакції на пости
             targetCount = 20;
             rewardPerUnit = 0.0005;
+            pricePerUser = 0.0015; // Приклад базової ціни реакцій, якщо використовується
             taskCost = 0.03;
         }
 
@@ -98,9 +116,12 @@ export default async function handler(req, res) {
                 return res.status(400).json({ error: `Insufficient balance. Need ${taskCost.toFixed(4)} USDT` });
             }
 
-            // Списуємо вартість пакету з балансу
+            // Списуємо вартість пакету з балансу (Escrow)
             const newBalance = currentBalance - taskCost;
             await advRef.update({ balance: newBalance });
+        } else if (taskType === 'telegram_subscription' && targetCount === 5000) {
+            // Для адмінського пакету 5000 можемо за бажанням занулити вартість
+            taskCost = 0; 
         }
 
         // 2. Додаємо завдання у загальну гілку для основної апки "tasks"
@@ -112,8 +133,9 @@ export default async function handler(req, res) {
             id: taskId,
             creatorId: userId,
             link: taskLink,
-            type: isReferral ? 'referral' : 'reaction',
+            type: taskType,
             reward: rewardPerUnit,                  
+            price_per_user: pricePerUser || rewardPerUnit,
             target_count: targetCount,     
             current_count: 0,
             status: "active",
@@ -126,7 +148,7 @@ export default async function handler(req, res) {
         await db.ref(`task_users/${userId}/my_campaigns/${taskId}`).set({
             id: taskId,
             link: taskLink,
-            type: isReferral ? 'referral' : 'reaction',
+            type: taskType,
             ordered_views: targetCount,      
             current_views: 0,
             created_at: timestamp   
