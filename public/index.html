@@ -341,21 +341,21 @@
                 <h3 style="text-align: center;" id="txt-create-title">Створити нове завдання</h3>
                 
                 <div class="task-types-container" style="margin-top: 15px;">
-                    <div class="section-header-title">🎯 Види завдань</div>
+                    <div class="section-header-title" id="txt-task-types-header">🎯 Види завдань</div>
                     
                     <div class="task-type-btn" id="type-reaction" onclick="selectTaskType('reaction')">
-                        <span>👍 Реакції на пости</span>
-                        <span class="badge-status badge-active">Активно</span>
+                        <span id="txt-task-react">👍 Реакції на пости</span>
+                        <span class="badge-status badge-active" id="txt-badge-active-1">Активно</span>
                     </div>
 
                     <div class="task-type-btn active-task" id="type-referral" onclick="selectTaskType('referral')">
-                        <span>👥 Реферали в боти/ігри</span>
-                        <span class="badge-status badge-active">Новинка</span>
+                        <span id="txt-task-ref">👥 Реферали в боти/ігри</span>
+                        <span class="badge-status badge-active" id="txt-badge-new">Новинка</span>
                     </div>
 
                     <div class="task-type-btn locked-task">
-                        <span>🔒 Скоро нове завдання</span>
-                        <span class="badge-status badge-dev">⏳ В розробці</span>
+                        <span id="txt-task-soon">🔒 Скоро нове завдання</span>
+                        <span class="badge-status badge-dev" id="txt-badge-dev">⏳ В розробці</span>
                     </div>
                 </div>
 
@@ -365,11 +365,11 @@
                 <input type="url" class="input-field" id="task-url" placeholder="https://t.me/your_bot?start=ref">
                 
                 <div id="referral-packages-section">
-                    <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-top: 12px; display: block;">Оберіть пакет рефералів:</label>
+                    <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-top: 12px; display: block;" id="txt-select-pkg-label">Оберіть пакет рефералів:</label>
                     <div class="packages-grid">
-                        <div class="pkg-btn selected" onclick="selectPackage(5, 0.02, this)">5 реф.<br><span style="font-size:11px; color:#ff9f1c;">0.02 USDT</span></div>
-                        <div class="pkg-btn" onclick="selectPackage(10, 0.04, this)">10 реф.<br><span style="font-size:11px; color:#ff9f1c;">0.04 USDT</span></div>
-                        <div class="pkg-btn" onclick="selectPackage(20, 0.08, this)">20 реф.<br><span style="font-size:11px; color:#ff9f1c;">0.08 USDT</span></div>
+                        <div class="pkg-btn selected" onclick="selectPackage(5, 0.02, this)">5 <span class="pkg-ref-text">реф.</span><br><span style="font-size:11px; color:#ff9f1c;">0.02 USDT</span></div>
+                        <div class="pkg-btn" onclick="selectPackage(10, 0.04, this)">10 <span class="pkg-ref-text">реф.</span><br><span style="font-size:11px; color:#ff9f1c;">0.04 USDT</span></div>
+                        <div class="pkg-btn" onclick="selectPackage(20, 0.08, this)">20 <span class="pkg-ref-text">реф.</span><br><span style="font-size:11px; color:#ff9f1c;">0.08 USDT</span></div>
                     </div>
                 </div>
 
@@ -404,7 +404,7 @@
                     <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-top: 15px; display: block;" id="txt-label-hash">Введіть Адресу вашого гаманця або Хеш транзакції:</label>
                     <input type="text" class="input-field" id="tx-hash-input" placeholder="Адреса гаманця (UQDw...) або Хеш">
 
-                    <div class="info-box">
+                    <div class="info-box" id="txt-info-box-html">
                         <b>💡 Як підтвердити поповнення:</b><br>
                         1. Здійсніть переказ USDT на адресу вище.<br>
                         2. Вкажіть сюди <b>Адресу вашого гаманця</b>, з якого зроблено переказ, або <b>Хеш транзакції</b> з історії.<br>
@@ -426,11 +426,11 @@
     <!-- Модальне вікно вибору причини відхилення -->
     <div class="modal-overlay" id="reject-modal">
         <div class="modal-window">
-            <h3>❌ Причина відхилення</h3>
-            <p style="font-size: 13px; color: #8b9e9f; margin-bottom: 15px;">Оберіть причину, чому звіт відхилено:</p>
-            <button class="btn" style="background: rgba(0,0,0,0.6); border: 1.5px solid var(--neon-aqua); color: #fff; margin-bottom: 8px;" onclick="confirmRejectReason('Не видно, що бот запущений')">Не видно, що бот запущений</button>
-            <button class="btn" style="background: rgba(0,0,0,0.6); border: 1.5px solid #ff4444; color: #fff; margin-bottom: 15px;" onclick="confirmRejectReason('Скріншот не той що потрібно')">Скріншот не той що потрібно</button>
-            <button class="btn" style="background: transparent; border: 1px solid #4a555a; color: #8b9e9f; box-shadow: none;" onclick="closeRejectModal()">Скасувати</button>
+            <h3 id="txt-modal-reject-title">❌ Причина відхилення</h3>
+            <p style="font-size: 13px; color: #8b9e9f; margin-bottom: 15px;" id="txt-modal-reject-desc">Оберіть причину, чому звіт відхилено:</p>
+            <button class="btn" style="background: rgba(0,0,0,0.6); border: 1.5px solid var(--neon-aqua); color: #fff; margin-bottom: 8px;" onclick="confirmRejectReason('Не видно, що бот запущений')" id="txt-reason-1">Не видно, що бот запущений</button>
+            <button class="btn" style="background: rgba(0,0,0,0.6); border: 1.5px solid #ff4444; color: #fff; margin-bottom: 15px;" onclick="confirmRejectReason('Скріншот не той що потрібно')" id="txt-reason-2">Скріншот не той що потрібно</button>
+            <button class="btn" style="background: transparent; border: 1px solid #4a555a; color: #8b9e9f; box-shadow: none;" onclick="closeRejectModal()" id="txt-modal-cancel">Скасувати</button>
         </div>
     </div>
 
@@ -483,12 +483,14 @@
                 go_deposit: "⚡️ ПОПОЛНИТИ РАХУНОК",
                 create_title: "Створити нове завдання",
                 create_hint: "Запросіть користувачів у свій бот або гру за реферальним посиланням.",
-                label_link: "Посилання на завдання (Бот/Гра):",
+                label_link: "Посилання на завдання (Бот/Гра/Пост):",
                 pkg_size: "Обсяг пакету:",
                 pkg_cost: "Вартість пакету:",
                 deposit_title: "Автоматичне поповнення",
                 deposit_desc: "Перекажіть USDT (TON) на вказаний гаманець та підтвердьте платіж за допомогою вашого Гаманця або Хешу транзакції.",
                 label_amount: "Гаманець для поповнення (USDT TON):",
+                label_hash: "Введіть Адресу вашого гаманця або Хеш транзакції:",
+                hash_placeholder: "Адреса гаманця (UQDw...) або Хеш",
                 btn_pay: "Підтвердити поповнення",
                 nav_lbl_camp: "Прогрес",
                 nav_lbl_create: "Замовлення",
@@ -500,9 +502,37 @@
                 err_server: "Помилка зв'язку з сервером.",
                 paying: "⏳ Перевірка транзакції...",
                 status_done: "Виконано",
-                status_active: "Активне",
+                status_active: "Активно",
                 support_hint: "Виникли питання чи проблеми з платежем?",
-                support_btn: "💬 Написати в підтримку"
+                support_btn: "💬 Написати в підтримку",
+                task_types_header: "🎯 Види завдань",
+                task_react: "👍 Реакції на пости",
+                task_ref: "👥 Реферали в боти/ігри",
+                task_soon: "🔒 Скоро нове завдання",
+                badge_active: "Активно",
+                badge_new: "Новинка",
+                badge_dev: "⏳ В розробці",
+                select_pkg_label: "Оберіть пакет рефералів:",
+                unit_refs: "рефералів",
+                unit_exec: "виконань",
+                ref_text: "реф.",
+                wallet_copied: "Адресу гаманця успішно скопійовано!",
+                deposit_success: "🎉 Успішно! Баланс поповнено.",
+                deposit_error: "❌ Помилка перевірки: ",
+                alert_no_hash: "Будь ласка, введіть адресу вашого гаманця або хеш транзакції.",
+                alert_no_url: "Please enter a valid URL.",
+                reject_title: "❌ Причина відхилення",
+                reject_desc: "Оберіть причину, чому звіт відхилено:",
+                reason_1: "Не видно, що бот запущений",
+                reason_2: "Скріншот не той що потрібно",
+                modal_cancel: "Скасувати",
+                btn_approve: "✅ Прийняти",
+                btn_reject: "❌ Відхилити",
+                sub_label: "👤 Виконавець ID:",
+                sub_shot: "📸 Скріншот надіслано в особистий чат бота",
+                lbl_type: "Тип:",
+                lbl_prog: "Прогрес:",
+                info_box_html: "<b>💡 Як підтвердити поповнення:</b><br>1. Здійсніть переказ USDT на адресу вище.<br>2. Вкажіть сюди <b>Адресу вашого гаманця</b>, з якого зроблено переказ, або <b>Хеш транзакції</b> з історії.<br>3. Натисніть кнопку підтвердження нижче."
             },
             en: {
                 nav_campaigns: "Task Progress",
@@ -512,12 +542,14 @@
                 go_deposit: "⚡️ TOP UP BALANCE",
                 create_title: "Create New Task",
                 create_hint: "Invite users to your bot or game via referral link.",
-                label_link: "Task Link (Bot/Game):",
+                label_link: "Task Link (Bot/Game/Post):",
                 pkg_size: "Package Volume:",
                 pkg_cost: "Package Cost:",
                 deposit_title: "Automatic Deposit",
                 deposit_desc: "Transfer USDT (TON) to the wallet address below and confirm using your Wallet Address or Transaction Hash.",
                 label_amount: "Deposit Wallet (USDT TON):",
+                label_hash: "Enter your Wallet Address or Transaction Hash:",
+                hash_placeholder: "Wallet Address (UQDw...) or Hash",
                 btn_pay: "Confirm Deposit",
                 nav_lbl_camp: "Progress",
                 nav_lbl_create: "Order",
@@ -531,7 +563,35 @@
                 status_done: "Done",
                 status_active: "Active",
                 support_hint: "Have questions or payment issues?",
-                support_btn: "💬 Contact Support"
+                support_btn: "💬 Contact Support",
+                task_types_header: "🎯 Task Types",
+                task_react: "👍 Post Reactions",
+                task_ref: "👥 Referrals to bots/games",
+                task_soon: "🔒 New task soon",
+                badge_active: "Active",
+                badge_new: "New",
+                badge_dev: "⏳ In dev",
+                select_pkg_label: "Select referral package:",
+                unit_refs: "referrals",
+                unit_exec: "executions",
+                ref_text: "ref.",
+                wallet_copied: "Wallet address successfully copied!",
+                deposit_success: "🎉 Success! Balance topped up.",
+                deposit_error: "❌ Verification error: ",
+                alert_no_hash: "Please enter your wallet address or transaction hash.",
+                alert_no_url: "Please enter a valid URL.",
+                reject_title: "❌ Rejection Reason",
+                reject_desc: "Select the reason for rejecting the submission:",
+                reason_1: "Bot launch not visible",
+                reason_2: "Incorrect screenshot",
+                modal_cancel: "Cancel",
+                btn_approve: "✅ Approve",
+                btn_reject: "❌ Reject",
+                sub_label: "👤 User ID:",
+                sub_shot: "📸 Screenshot sent to bot private chat",
+                lbl_type: "Type:",
+                lbl_prog: "Progress:",
+                info_box_html: "<b>💡 How to confirm deposit:</b><br>1. Transfer USDT to the address above.<br>2. Enter your <b>Wallet Address</b> (from which you transferred) or <b>Transaction Hash</b> here.<br>3. Click the confirmation button below."
             },
             ru: {
                 nav_campaigns: "Прогресс заданий",
@@ -541,12 +601,14 @@
                 go_deposit: "⚡️ ПОПОЛНИТЬ СЧЕТ",
                 create_title: "Создать новое задание",
                 create_hint: "Пригласите пользователей в свой бот или игру по реферальной ссылке.",
-                label_link: "Ссылка на задание (Бот/Игра):",
+                label_link: "Ссылка на задание (Бот/Игра/Пост):",
                 pkg_size: "Объем пакета:",
                 pkg_cost: "Стоимость пакета:",
                 deposit_title: "Автоматическое пополнение",
                 deposit_desc: "Переведите USDT (TON) на указанный кошелек и подтвердите платеж с помощью вашего Кошелька или Хэша транзакции.",
                 label_amount: "Кошелек для пополнения (USDT TON):",
+                label_hash: "Введите Адрес вашего кошелька или Хэш транзакции:",
+                hash_placeholder: "Адрес кошелька (UQDw...) или Хэш",
                 btn_pay: "Подтвердить пополнение",
                 nav_lbl_camp: "Progress",
                 nav_lbl_create: "Заказ",
@@ -560,7 +622,35 @@
                 status_done: "Выполнено",
                 status_active: "Активно",
                 support_hint: "Возникли вопросы или проблемы с платежем?",
-                support_btn: "💬 Написать в поддержку"
+                support_btn: "💬 Написать в поддержку",
+                task_types_header: "🎯 Виды заданий",
+                task_react: "👍 Реакции на посты",
+                task_ref: "👥 Рефералы в боты/игры",
+                task_soon: "🔒 Скоро новое задание",
+                badge_active: "Активно",
+                badge_new: "Новинка",
+                badge_dev: "⏳ В разработке",
+                select_pkg_label: "Выберите пакет рефералов:",
+                unit_refs: "рефералов",
+                unit_exec: "выполнений",
+                ref_text: "реф.",
+                wallet_copied: "Адрес кошелька успешно скопирован!",
+                deposit_success: "🎉 Успешно! Баланс пополнен.",
+                deposit_error: "❌ Ошибка проверки: ",
+                alert_no_hash: "Пожалуйста, введите адрес вашего кошелька или хэш транзакции.",
+                alert_no_url: "Please enter a valid URL.",
+                reject_title: "❌ Причина отклонения",
+                reject_desc: "Выберите причину, почему отчет отклонен:",
+                reason_1: "Не видно, что бот запущен",
+                reason_2: "Скриншот не тот что нужно",
+                modal_cancel: "Отмена",
+                btn_approve: "✅ Принять",
+                btn_reject: "❌ Отклонить",
+                sub_label: "👤 Пользователь ID:",
+                sub_shot: "📸 Скриншот отправлен в личный чат бота",
+                lbl_type: "Тип:",
+                lbl_prog: "Прогресс:",
+                info_box_html: "<b>💡 Как подтвердить пополнение:</b><br>1. Совершите перевод USDT на адрес выше.<br>2. Укажите сюда <b>Адрес вашего кошелька</b>, с которого сделан перевод, или <b>Хэш транзакции</b> из истории.<br>3. Нажмите кнопку подтверждения ниже."
             }
         };
 
@@ -570,6 +660,7 @@
             document.getElementById('type-referral').className = type === 'referral' ? 'task-type-btn active-task' : 'task-type-btn';
             
             const pkgSection = document.getElementById('referral-packages-section');
+            const t = translations[currentLang];
             if (type === 'referral') {
                 pkgSection.style.display = 'block';
                 updatePackageUI();
@@ -577,7 +668,7 @@
                 pkgSection.style.display = 'none';
                 selectedPackageSize = 20;
                 selectedPackageCost = 0.03;
-                document.getElementById('txt-pkg-value').innerText = "20 виконань";
+                document.getElementById('txt-pkg-value').innerText = `20 ${t.unit_exec}`;
                 document.getElementById('txt-pkg-cost-val').innerText = "0.03 USDT";
             }
             updateButtonsUI();
@@ -592,8 +683,9 @@
         }
 
         function updatePackageUI() {
+            const t = translations[currentLang];
             if (selectedTaskType === 'referral') {
-                document.getElementById('txt-pkg-value').innerText = `${selectedPackageSize} рефералів`;
+                document.getElementById('txt-pkg-value').innerText = `${selectedPackageSize} ${t.unit_refs}`;
                 document.getElementById('txt-pkg-cost-val').innerText = `${selectedPackageCost.toFixed(2)} USDT`;
             }
             updateButtonsUI();
@@ -639,6 +731,28 @@
             document.getElementById('txt-deposit-title').innerText = t.deposit_title;
             document.getElementById('txt-deposit-desc').innerText = t.deposit_desc;
             
+            document.getElementById('txt-task-types-header').innerText = t.task_types_header;
+            document.getElementById('txt-task-react').innerText = t.task_react;
+            document.getElementById('txt-task-ref').innerText = t.task_ref;
+            document.getElementById('txt-task-soon').innerText = t.task_soon;
+            document.getElementById('txt-badge-active-1').innerText = t.badge_active;
+            document.getElementById('txt-badge-new').innerText = t.badge_new;
+            document.getElementById('txt-badge-dev').innerText = t.badge_dev;
+            document.getElementById('txt-select-pkg-label').innerText = t.select_pkg_label;
+            document.getElementById('txt-label-wallet').innerText = t.label_amount;
+            document.getElementById('txt-label-hash').innerText = t.label_hash;
+            document.getElementById('tx-hash-input').placeholder = t.hash_placeholder;
+            document.getElementById('btn-verify-deposit').innerText = t.btn_pay;
+            document.getElementById('txt-info-box-html').innerHTML = t.info_box_html;
+
+            document.getElementById('txt-modal-reject-title').innerText = t.reject_title;
+            document.getElementById('txt-modal-reject-desc').innerText = t.reject_desc;
+            document.getElementById('txt-reason-1').innerText = t.reason_1;
+            document.getElementById('txt-reason-2').innerText = t.reason_2;
+            document.getElementById('txt-modal-cancel').innerText = t.modal_cancel;
+
+            document.querySelectorAll('.pkg-ref-text').forEach(el => el.innerText = t.ref_text);
+
             document.getElementById('lbl-nav-camp').innerText = t.nav_lbl_camp;
             document.getElementById('lbl-nav-create').innerText = t.nav_lbl_create;
             document.getElementById('lbl-nav-dep').innerText = t.nav_lbl_dep;
@@ -646,6 +760,7 @@
             document.getElementById('txt-support-hint').innerText = t.support_hint;
             document.getElementById('btn-support-link').innerText = t.support_btn;
 
+            updatePackageUI();
             updateButtonsUI();
             if (typeof fetchAdvertiserData === 'function') fetchAdvertiserData();
         }
@@ -653,7 +768,13 @@
         function updateButtonsUI() {
             const btnSubmit = document.getElementById('btn-submit-task');
             let costStr = (userId === "6043278492") ? "0.00 USDT" : `${selectedPackageCost.toFixed(2)} USDT`;
-            btnSubmit.innerText = (currentLang === 'uk') ? `Запустити кампанію (${costStr})` : `Launch Campaign (${costStr})`;
+            if (currentLang === 'uk') {
+                btnSubmit.innerText = `Запустити кампанію (${costStr})`;
+            } else if (currentLang === 'ru') {
+                btnSubmit.innerText = `Запустить кампанию (${costStr})`;
+            } else {
+                btnSubmit.innerText = `Launch Campaign (${costStr})`;
+            }
         }
 
         function switchTab(tabName, element) {
@@ -690,19 +811,20 @@
 
         function copyWalletAddress() {
             const walletInput = document.getElementById('master-wallet-address');
-            if (!walletInput.value || walletInput.value.includes('Завантаження')) return;
+            const t = translations[currentLang];
+            if (!walletInput.value || walletInput.value.includes('Завантаження') || walletInput.value.includes('Loading')) return;
             navigator.clipboard.writeText(walletInput.value).then(() => {
-                alert("Адресу гаманця успішно скопійовано!");
+                alert(t.wallet_copied);
             });
         }
 
         async function submitDepositHash() {
             const hashInput = document.getElementById('tx-hash-input').value.trim();
+            const t = translations[currentLang];
             if (!hashInput) {
-                alert("Будь ласка, введіть адресу вашого гаманця або хеш транзакції.");
+                alert(t.alert_no_hash);
                 return;
             }
-            const t = translations[currentLang];
             const btnVerify = document.getElementById('btn-verify-deposit');
             btnVerify.disabled = true;
             btnVerify.innerText = t.paying;
@@ -718,13 +840,13 @@
                     balance = data.newBalance;
                     document.getElementById('adv-balance').innerText = balance.toFixed(4);
                     document.getElementById('tx-hash-input').value = "";
-                    alert("🎉 Успішно! Баланс поповнено.");
+                    alert(t.deposit_success);
                     switchTabDirect('create');
                 } else {
-                    alert("❌ Помилка перевірки: " + (data.error || "Транзакцію не знайдено"));
+                    alert(t.deposit_error + (data.error || "Транзакцію не знайдено"));
                 }
             } catch (err) {
-                alert("Помилка зв'язку з сервером.");
+                alert(translations[currentLang].err_server);
             } finally {
                 btnVerify.disabled = false;
                 applyTranslations();
@@ -736,7 +858,7 @@
             const t = translations[currentLang];
 
             if (!taskLink) {
-                alert("Please enter a valid URL.");
+                alert(t.alert_no_url);
                 return;
             }
 
@@ -773,7 +895,6 @@
             }
         }
 
-        // Відкриття модального вікна вибору причини відхилення
         function openRejectModal(taskId, submissionId) {
             pendingRejectData = { taskId, submissionId };
             document.getElementById('reject-modal').classList.add('active');
@@ -809,7 +930,7 @@
                     alert(data.error || "Помилка модерації");
                 }
             } catch (e) {
-                alert("Помилка зв'язку з сервером");
+                alert(translations[currentLang].err_server);
             }
         }
 
@@ -838,12 +959,13 @@
                     alert(data.error || "Помилка модерації");
                 }
             } catch (e) {
-                alert("Помилка зв'язку з сервером");
+                alert(translations[currentLang].err_server);
             }
         }
 
         async function fetchAdvertiserData() {
             if (!window.Telegram.WebApp.initData) return;
+            const t = translations[currentLang];
 
             try {
                 const response = await fetch('/api/user', {
@@ -880,11 +1002,11 @@
                                     if (sub.status === 'pending') {
                                         submissionsHtml += `
                                             <div class="submission-card">
-                                                <div style="font-size:11px; margin-bottom:5px;">👤 Виконавець ID: ${sub.userId}</div>
-                                                <div style="font-size:11px; color:#ffbf69; margin-bottom:6px;">📸 Скріншот надіслано в особистий чат бота</div>
+                                                <div style="font-size:11px; margin-bottom:5px;">${t.sub_label} ${sub.userId}</div>
+                                                <div style="font-size:11px; color:#ffbf69; margin-bottom:6px;">${t.sub_shot}</div>
                                                 <div style="display:flex; gap:6px;">
-                                                    <button class="btn" style="margin:0; padding:6px; font-size:12px; background:#00b09b; color:#fff;" onclick="moderateSubmission('${campId}', '${subId}', 'approve')">✅ Прийняти</button>
-                                                    <button class="btn" style="margin:0; padding:6px; font-size:12px; background:#ff4444; color:#fff; box-shadow:none;" onclick="moderateSubmission('${campId}', '${subId}', 'reject')">❌ Відхилити</button>
+                                                    <button class="btn" style="margin:0; padding:6px; font-size:12px; background:#00b09b; color:#fff;" onclick="moderateSubmission('${campId}', '${subId}', 'approve')">${t.btn_approve}</button>
+                                                    <button class="btn" style="margin:0; padding:6px; font-size:12px; background:#ff4444; color:#fff; box-shadow:none;" onclick="moderateSubmission('${campId}', '${subId}', 'reject')">${t.btn_reject}</button>
                                                 </div>
                                             </div>
                                         `;
@@ -896,8 +1018,8 @@
                                 <div class="campaign-item">
                                     <div style="font-size:12px; color:var(--neon-aqua); word-break:break-all;">🔗 ${camp.link}</div>
                                     <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:6px;">
-                                        <span>Тип: <b>${camp.type || 'reaction'}</b></span>
-                                        <span>Прогрес: <b style="color:#ff9f1c">${current} / ${target}</b></span>
+                                        <span>${t.lbl_type} <b>${camp.type || 'reaction'}</b></span>
+                                        <span>${t.lbl_prog} <b style="color:#ff9f1c">${current} / ${target}</b></span>
                                     </div>
                                     ${submissionsHtml}
                                 </div>
@@ -905,10 +1027,10 @@
                         });
 
                         if (activeCount === 0) {
-                            listDiv.innerHTML = `<p style="color: #4a555a; font-style: italic;">У вас немає активних кампаній</p>`;
+                            listDiv.innerHTML = `<p style="color: #4a555a; font-style: italic;">${t.no_campaigns}</p>`;
                         }
                     } else {
-                        document.getElementById('campaigns-list').innerHTML = `<p style="color: #4a555a; font-style: italic;">У вас немає активних кампаній</p>`;
+                        document.getElementById('campaigns-list').innerHTML = `<p style="color: #4a555a; font-style: italic;">${t.no_campaigns}</p>`;
                     }
                 }
             } catch (e) {
