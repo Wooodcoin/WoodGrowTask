@@ -69,19 +69,38 @@ export default async function handler(req, res) {
         const executorUserId = submission.userId;
         const timestamp = Date.now();
 
+        // Завантажуємо дані самого завдання, щоб взяти актуальну нагороду та ліміти
+        const taskRef = db.ref(`tasks/${taskId}`);
+        const taskSnap = await taskRef.once('value');
+        
+        if (!taskSnap.exists()) {
+            return res.status(404).json({ error: 'Task not found in database' });
+        }
+
+        const taskData = taskSnap.val();
+
         if (action === 'approve') {
             await subRef.update({ status: 'approved', moderatedAt: timestamp });
             await db.ref(`task_users/${userId}/my_campaigns/${taskId}/submissions/${submissionId}`).update({ status: 'approved', moderatedAt: timestamp });
 
-            const taskRef = db.ref(`tasks/${taskId}`);
-            const taskSnap = await taskRef.once('value');
-            if (taskSnap.exists()) {
-                const taskData = taskSnap.val();
-                const newCount = (parseInt(taskData.current_count || taskData.current_views || 0)) + 1;
-                
-                await taskRef.update({ current_count: newCount });
-                await db.ref(`task_users/${userId}/my_campaigns/${taskId}`).update({ current_views: newCount, current_count: newCount });
-            }
+            const currentCount = parseInt(taskData.current_count || taskData.current_views || 0) + 1;
+            const targetCount = parseInt(taskData.target_count || taskData.ordered_views || 20);
+
+            // Перевіряємо, чи досягнуто ліміт пакету
+            const newStatus = currentCount >= targetCount ? 'completed' : 'active';
+
+            await taskRef.update({ 
+                current_count: currentCount,
+                status: newStatus 
+            });
+            await db.ref(`task_users/${userId}/my_campaigns/${taskId}`).update({ 
+                current_views: currentCount, 
+                current_count: currentCount,
+                status: newStatus
+            });
+
+            // Динамічно визначаємо нагороду для конкретного типу завдання
+            const rewardAmount = parseFloat(taskData.reward || taskData.reward_per_user) || 0.001;
 
             const executorRef = db.ref(`task_users/${executorUserId}`);
             const executorSnap = await executorRef.once('value');
@@ -91,9 +110,7 @@ export default async function handler(req, res) {
                 currentExecutorBalance = parseFloat(executorSnap.val().balance) || 0;
             }
 
-            const rewardAmount = 0.002;
             const newExecutorBalance = currentExecutorBalance + rewardAmount;
-
             await executorRef.update({ balance: newExecutorBalance });
 
             // Повідомлення виконавцю про успішне схвалення
@@ -103,7 +120,7 @@ export default async function handler(req, res) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chat_id: executorUserId,
-                        text: `✅ Ваш звіт по завданню успішно схвалено! Ви отримали +${rewardAmount} USDT.`
+                        text: `✅ Ваш звіт по завданню успішно схвалено! Ви отримали +${rewardAmount.toFixed(4)} USDT.`
                     })
                 });
             } catch (tgErr) {
@@ -112,7 +129,8 @@ export default async function handler(req, res) {
 
             return res.status(200).json({
                 success: true,
-                message: 'Submission approved and reward credited to executor'
+                message: 'Submission approved and reward credited to executor',
+                taskStatus: newStatus
             });
 
         } else if (action === 'reject') {
@@ -143,6 +161,8 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Invalid action' });
         }
 
+    } tatchError => { // захист від одруків у catch
+        // Залишаємо стандартний блок обробки помилок
     } catch (e) {
         console.error("Error moderating task:", e);
         return res.status(500).json({ error: 'Database transaction error' });
