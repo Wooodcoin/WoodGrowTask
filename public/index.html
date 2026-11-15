@@ -160,7 +160,7 @@
         }
 
         .badge-active { background: rgba(0, 0, 0, 0.2); color: #fff; }
-        .badge-dev { background: rgba(0, 0, 0, 0.5); color: #ffbf69; border: 1px solid rgba(255, 191, 105, 0.3); }
+        .badge-sub { background: rgba(0, 0, 0, 0.5); color: #00f5d4; border: 1px solid rgba(0, 245, 212, 0.3); }
 
         .packages-grid {
             display: grid;
@@ -355,11 +355,11 @@
 
                     <div class="task-type-btn" id="type-telegram_subscription" onclick="selectTaskType('telegram_subscription')">
                         <span id="txt-task-sub">📢 Підписка на Telegram-канали</span>
-                        <span class="badge-status badge-active" id="txt-badge-sub">HOT 🔥</span>
+                        <span class="badge-status badge-sub" id="txt-badge-sub">HOT 🔥</span>
                     </div>
                 </div>
 
-                <p style="color: #8b9e9f; font-size: 12px; text-align: center; margin-bottom: 15px;" id="txt-create-hint">Запросіть користувачів у свій бот або гру за реферальним посиланням.</p>
+                <p style="color: #ff9f1c; font-size: 12px; text-align: center; margin-bottom: 15px; font-weight: bold;" id="txt-create-hint">Запросіть користувачів у свій бот або гру за реферальним посиланням.</p>
                 
                 <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на завдання (Бот/Гра/Пост):</label>
                 <input type="url" class="input-field" id="task-url" placeholder="https://t.me/your_bot?start=ref">
@@ -367,7 +367,7 @@
                 <div id="packages-section">
                     <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-top: 12px; display: block;" id="txt-select-pkg-label">Оберіть пакет:</label>
                     <div class="packages-grid" id="packages-grid-container">
-                        <!-- Динамічно заповнюється залежно від типу завдання -->
+                        <!-- Динамічно заповнюється -->
                     </div>
                 </div>
 
@@ -482,8 +482,8 @@
                 go_deposit: "⚡️ ПОПОЛНИТИ РАХУНОК",
                 create_title: "Створити нове завдання",
                 create_hint_ref: "Запросіть користувачів у свій бот або гру за реферальним посиланням.",
-                create_hint_sub: "Вкажіть посилання на ваш Telegram-канал для підписок.",
-                label_link: "Посилання на завдання (Бот/Гра/Пост):",
+                create_hint_sub: "📢 Вкажіть посилання на канал. УВАГА: Обов'язково додайте нашого бота в адміністратори вашого каналу перед запуском!",
+                label_link: "Посилання на завдання (Бот/Гра/Канал):",
                 pkg_size: "Обсяг пакету:",
                 pkg_cost: "Вартість пакету:",
                 deposit_title: "Автоматичне поповнення",
@@ -544,8 +544,8 @@
                 go_deposit: "⚡️ TOP UP BALANCE",
                 create_title: "Create New Task",
                 create_hint_ref: "Invite users to your bot or game via referral link.",
-                create_hint_sub: "Provide the link to your Telegram channel for subscriptions.",
-                label_link: "Task Link (Bot/Game/Post):",
+                create_hint_sub: "📢 Enter channel link. WARNING: Make sure to add our bot as an administrator to your channel before launching!",
+                label_link: "Task Link (Bot/Game/Channel):",
                 pkg_size: "Package Volume:",
                 pkg_cost: "Package Cost:",
                 deposit_title: "Automatic Deposit",
@@ -606,8 +606,8 @@
                 go_deposit: "⚡️ ПОПОЛНИТЬ СЧЕТ",
                 create_title: "Создать новое задание",
                 create_hint_ref: "Пригласите пользователей в свой бот или игру по реферальной ссылке.",
-                create_hint_sub: "Укажите ссылку на ваш Telegram-канал для подписок.",
-                label_link: "Ссылка на задание (Бот/Игра/Пост):",
+                create_hint_sub: "📢 Укажите ссылку на канал. ВНИМАНИЕ: Обязательно добавьте нашего бота в администраторы вашего канала перед запуском!",
+                label_link: "Ссылка на задание (Бот/Игра/Канал):",
                 pkg_size: "Объем пакета:",
                 pkg_cost: "Стоимость пакета:",
                 deposit_title: "Автоматическое пополнение",
@@ -718,7 +718,7 @@
             if (selectedTaskType === 'telegram_subscription') unitLabel = t.unit_subs;
 
             document.getElementById('txt-pkg-value').innerText = `${selectedPackageSize} ${unitLabel}`;
-            document.getElementById('txt-pkg-cost-val').innerText = `${selectedPackageCost.toFixed(2)} USDT`;
+            document.getElementById('txt-pkg-cost-val').innerText = `${selectedPackageCost.toFixed(3)} USDT`;
             updateButtonsUI();
         }
 
@@ -921,74 +921,6 @@
             }
         }
 
-        function openRejectModal(taskId, submissionId) {
-            pendingRejectData = { taskId, submissionId };
-            document.getElementById('reject-modal').classList.add('active');
-        }
-
-        function closeRejectModal() {
-            document.getElementById('reject-modal').classList.remove('active');
-            pendingRejectData = { taskId: null, submissionId: null };
-        }
-
-        async function confirmRejectReason(reason) {
-            const { taskId, submissionId } = pendingRejectData;
-            if (!taskId || !submissionId) return;
-            closeRejectModal();
-
-            try {
-                const response = await fetch('/api/moderate-task', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: userId,
-                        initData: window.Telegram.WebApp.initData,
-                        taskId: taskId,
-                        submissionId: submissionId,
-                        action: 'reject',
-                        reason: reason
-                    })
-                });
-                const data = await response.json();
-                if (response.ok && data.success) {
-                    fetchAdvertiserData();
-                } else {
-                    alert(data.error || "Помилка модерації");
-                }
-            } catch (e) {
-                alert(translations[currentLang].err_server);
-            }
-        }
-
-        async function moderateSubmission(taskId, submissionId, action) {
-            if (action === 'reject') {
-                openRejectModal(taskId, submissionId);
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/moderate-task', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: userId,
-                        initData: window.Telegram.WebApp.initData,
-                        taskId: taskId,
-                        submissionId: submissionId,
-                        action: action
-                    })
-                });
-                const data = await response.json();
-                if (response.ok && data.success) {
-                    fetchAdvertiserData();
-                } else {
-                    alert(data.error || "Помилка модерації");
-                }
-            } catch (e) {
-                alert(translations[currentLang].err_server);
-            }
-        }
-
         async function fetchAdvertiserData() {
             if (!window.Telegram.WebApp.initData) return;
             const t = translations[currentLang];
@@ -1022,24 +954,6 @@
                             
                             activeCount++;
 
-                            let submissionsHtml = '';
-                            if (camp.submissions) {
-                                Object.entries(camp.submissions).forEach(([subId, sub]) => {
-                                    if (sub.status === 'pending') {
-                                        submissionsHtml += `
-                                            <div class="submission-card">
-                                                <div style="font-size:11px; margin-bottom:5px;">${t.sub_label} ${sub.userId}</div>
-                                                <div style="font-size:11px; color:#ffbf69; margin-bottom:6px;">${t.sub_shot}</div>
-                                                <div style="display:flex; gap:6px;">
-                                                    <button class="btn" style="margin:0; padding:6px; font-size:12px; background:#00b09b; color:#fff;" onclick="moderateSubmission('${campId}', '${subId}', 'approve')">${t.btn_approve}</button>
-                                                    <button class="btn" style="margin:0; padding:6px; font-size:12px; background:#ff4444; color:#fff; box-shadow:none;" onclick="moderateSubmission('${campId}', '${subId}', 'reject')">${t.btn_reject}</button>
-                                                </div>
-                                            </div>
-                                        `;
-                                    }
-                                });
-                            }
-
                             listDiv.innerHTML += `
                                 <div class="campaign-item">
                                     <div style="font-size:12px; color:var(--neon-aqua); word-break:break-all;">🔗 ${camp.link}</div>
@@ -1047,7 +961,6 @@
                                         <span>${t.lbl_type} <b>${camp.type || 'reaction'}</b></span>
                                         <span>${t.lbl_prog} <b style="color:#ff9f1c">${current} / ${target}</b></span>
                                     </div>
-                                    ${submissionsHtml}
                                 </div>
                             `;
                         });
