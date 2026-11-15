@@ -60,37 +60,6 @@ export default async function handler(req, res) {
         }
         // ============================================================
 
-        // Якщо це завдання на підписку, спробуємо отримати числовий chat_id (особливо для посилань із плюсом)
-        let resolvedChatId = taskLink.trim();
-        if (taskType === 'telegram_subscription') {
-            try {
-                // Якщо посилання приватне (містить плюс або joinchat)
-                if (resolvedChatId.includes('t.me/+') || resolvedChatId.includes('t.me/joinchat/')) {
-                    const chatInfoRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChat?chat_id=${encodeURIComponent(resolvedChatId)}`);
-                    const chatInfoData = await chatInfoRes.json();
-                    
-                    if (chatInfoData.ok && chatInfoData.result && chatInfoData.result.id) {
-                        resolvedChatId = chatInfoData.result.id.toString(); // Зберігаємо числовий ID типу -100xxxxxxxxxx
-                    } else {
-                        return res.status(400).json({ 
-                            error: 'invalid_channel_access',
-                            error_ua: 'Бот не має доступу до цього каналу. Переконайтеся, що бот доданий як адміністратор!' 
-                        });
-                    }
-                } else {
-                    // Для публічних каналів приведемо до вигляду @username
-                    if (resolvedChatId.includes('t.me/')) {
-                        const parts = resolvedChatId.split('t.me/');
-                        resolvedChatId = '@' + parts[parts.length - 1].replace('/', '');
-                    } else if (!resolvedChatId.startsWith('@')) {
-                        resolvedChatId = '@' + resolvedChatId;
-                    }
-                }
-            } catch (err) {
-                console.error("Error resolving chat ID during creation:", err);
-            }
-        }
-
         const isSuperAdmin = (userId.toString() === SUPER_ADMIN_ID);
         const advRef = db.ref(`task_users/${userId}`);
         
@@ -155,8 +124,7 @@ export default async function handler(req, res) {
         const newTaskData = {
             id: taskId,
             creatorId: userId,
-            link: taskLink,             // Оригінальне посилання для користувача
-            chat_id: resolvedChatId,    // Розпізнаний chat_id або юзернейм для перевірки
+            link: taskLink,
             type: taskType,
             reward: rewardPerUnit,                  
             price_per_user: pricePerUser || rewardPerUnit,
