@@ -50,6 +50,17 @@ export default async function handler(req, res) {
     }
 
     try {
+        // === ПЕРЕВІРКА НА ПРИВАТНЕ ПОСИЛАННЯ З ПЛЮСОМ ДЛЯ ПІДПИСОК ===
+        if (taskType === 'telegram_subscription') {
+            const trimmedLink = taskLink.trim();
+            if (trimmedLink.includes('t.me/+') || trimmedLink.includes('t.me/joinchat/')) {
+                return res.status(400).json({ 
+                    error: 'private_link_not_allowed', 
+                    error_ua: 'Приватні посилання з плюсом (+) не підтримуються. Використовуйте публічні канали (напр. https://t.me/channel або @channel).' 
+                });
+            }
+        }
+
         // === ПЕРЕВІРКА: ОДНЕ ПОСИЛАННЯ — ОДНЕ ЗАВДАННЯ НАЗАВЖДИ ===
         const tasksSnapshot = await db.ref('tasks').orderByChild('link').equalTo(taskLink).once('value');
         if (tasksSnapshot.exists()) {
