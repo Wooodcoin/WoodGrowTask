@@ -60,6 +60,37 @@ export default async function handler(req, res) {
         }
         // ============================================================
 
+        // Якщо це завдання на підписку, спробуємо отримати числовий chat_id (особливо для посилань із плюсом)
+        let resolvedChatId = taskLink.trim();
+        if (taskType === 'telegram_subscription') {
+            try {
+                // Якщо посилання приватне (містить плюс або joinchat)
+                if (resolvedChatId.includes('t.me/+') || resolvedChatId.includes('t.me/joinchat/')) {
+                    const chatInfoRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChat?chat_id=${encodeURIComponent(resolvedChatId)}`);
+                    const chatInfoData = await chatInfoRes.json();
+                    
+                    if (chatInfoData.ok && chatInfoData.result && chatInfoData.result.id) {
+                        resolvedChatId = chatInfoData.result.id.toString(); // Зберігаємо числовий ID типу -100xxxxxxxxxx
+                    } else {
+                        return res.status(400).json({ 
+                            error: 'invalid_channel_access',
+                            error_ua: 'Бот не має доступу до цього каналу. Переконайтеся, що бот доданий як адміністратор!' 
+                        });
+                    }
+                } else {
+                    // Для публічних каналів приведемо до вигляду @username
+                    if (resolvedChatId.includes('t.me/')) {
+                        const parts = resolvedChatId.split('t.me/');
+                        resolvedChatId = '@' + parts[parts.length - 1].replace('/', '');
+                    } else if (!resolvedChatId.startsWith('@')) {
+                        resolvedChatId = '@' + resolvedChatId;
+                    }
+                }
+            } catch (err) {
+                console.error("Error resolving chat ID during creation:", err);
+            }
+        }
+
         const isSuperAdmin = (userId.toString() === SUPER_ADMIN_ID);
         const advRef = db.ref(`task_users/${userId}`);
         
@@ -82,10 +113,7 @@ export default async function handler(req, res) {
             taskCost = size * 0.004;               
         } 
         else if (taskType === 'telegram_subscription') {
-            // Пакет підписок на Telegram-канали
             const size = parseInt(packageSize);
-            
-            // Звичайним користувачам доступні 20, 50, 100. Адміну — також 5000.
             const allowedPackages = isSuperAdmin ? [20, 50, 100, 5000] : [20, 50, 100];
 
             if (!allowedPackages.includes(size)) {
@@ -93,20 +121,18 @@ export default async function handler(req, res) {
             }
 
             targetCount = size;
-            rewardPerUnit = 0.001;                 // Винагорода виконавцю за 1 підписку
-            pricePerUser = 0.0018;                 // Ціна за 1 підписку для рекламодавця
-            taskCost = size * pricePerUser;        // Загальна вартість (0.036, 0.09, 0.18 або 9.00 USDT)
+            rewardPerUnit = 0.001;                 
+            pricePerUser = 0.0018;                 
+            taskCost = size * pricePerUser;        
         } 
         else {
-            // Стандартні реакції на пости
             targetCount = 20;
             rewardPerUnit = 0.0005;
-            pricePerUser = 0.0015; // Приклад базової ціни реакцій, якщо використовується
+            pricePerUser = 0.0015; 
             taskCost = 0.03;
         }
 
         if (!isSuperAdmin) {
-            // Перевіряємо баланс звичайного рекламодавця
             const advSnapshot = await advRef.once('value');
             if (!advSnapshot.exists()) return res.status(444).json({ error: 'Advertiser profile not found' });
             
@@ -116,15 +142,12 @@ export default async function handler(req, res) {
                 return res.status(400).json({ error: `Insufficient balance. Need ${taskCost.toFixed(4)} USDT` });
             }
 
-            // Списуємо вартість пакету з балансу (Escrow)
             const newBalance = currentBalance - taskCost;
             await advRef.update({ balance: newBalance });
         } else if (taskType === 'telegram_subscription' && targetCount === 5000) {
-            // Для адмінського пакету 5000 можемо за бажанням занулити вартість
             taskCost = 0; 
         }
 
-        // 2. Додаємо завдання у загальну гілку для основної апки "tasks"
         const globalTasksRef = db.ref('tasks').push();
         const taskId = globalTasksRef.key;
         const timestamp = new Date().toISOString();
@@ -132,7 +155,8 @@ export default async function handler(req, res) {
         const newTaskData = {
             id: taskId,
             creatorId: userId,
-            link: taskLink,
+            link: taskLink,             // Оригінальне посилання для користувача
+            chat_id: resolvedChatId,    // Розпізнаний chat_id або юзернейм для перевірки
             type: taskType,
             reward: rewardPerUnit,                  
             price_per_user: pricePerUser || rewardPerUnit,
@@ -144,7 +168,6 @@ export default async function handler(req, res) {
 
         await globalTasksRef.set(newTaskData);
 
-        // Також дублюємо запис у кабінет самого рекламодавця для вкладки "Прогрес"
         await db.ref(`task_users/${userId}/my_campaigns/${taskId}`).set({
             id: taskId,
             link: taskLink,
