@@ -249,14 +249,6 @@
             text-align: left;
         }
 
-        .submission-card {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255, 191, 105, 0.3);
-            border-radius: 10px;
-            padding: 10px;
-            margin-top: 8px;
-        }
-
         .lang-select-btn {
             display: flex;
             align-items: center;
@@ -361,7 +353,7 @@
 
                 <p style="color: #ff9f1c; font-size: 12px; text-align: center; margin-bottom: 15px; font-weight: bold;" id="txt-create-hint">Запросіть користувачів у свій бот або гру за реферальним посиланням.</p>
                 
-                <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на завдання (Бот/Гра/Канал):</label>
+                <label style="font-size: 13px; font-weight: bold; color: var(--neon-aqua); margin-bottom: 5px; display: block;" id="txt-label-link">Посилання на Mini App:</label>
                 <input type="url" class="input-field" id="task-url" placeholder="https://t.me/your_bot?start=ref">
                 
                 <div id="packages-section">
@@ -482,8 +474,13 @@
                 go_deposit: "⚡️ ПОПОЛНИТИ РАХУНОК",
                 create_title: "Створити нове завдання",
                 create_hint_ref: "Запросіть користувачів у свій бот або гру за реферальним посиланням.",
-                create_hint_sub: "📢 Вкажіть посилання на канал. УВАГА: Обов'язково додайте бота <a href='https://t.me/WoodGrowCoinBot' target='_blank' style='color: #00f5d4; font-weight: bold;'>@WoodGrowCoinBot</a> в адміністратори вашого каналу перед запуском!",
-                label_link: "Посилання на завдання (Бот/Гра/Канал):",
+                create_hint_sub: "📢 Вкажіть публічне посилання на канал. УВАГА: Обов'язково додайте бота <a href='https://t.me/WoodGrowCoinBot' target='_blank' style='color: #00f5d4; font-weight: bold;'>@WoodGrowCoinBot</a> в адміністратори вашого каналу перед запуском!",
+                create_hint_react: "Створіть завдання на реакції для своїх постів.",
+                
+                label_link_ref: "Посилання на Mini App:",
+                label_link_sub: "Посилання на канал:",
+                label_link_react: "Посилання на пости:",
+
                 pkg_size: "Обсяг пакету:",
                 pkg_cost: "Вартість пакету:",
                 deposit_title: "Автоматичне поповнення",
@@ -499,6 +496,7 @@
                 success_task: "🎉 Завдання успішно створено!",
                 err_balance: "❌ Недостатньо балансу для створення завдання.",
                 err_duplicate: "❌ Це посилання вже використовувалося! Одне посилання можна додати лише один раз.",
+                err_private_link: "❌ Приватні посилання з плюсом (+) не підтримуються. Використовуйте публічні канали (напр. https://t.me/channel або @channel).",
                 err_server: "Помилка зв'язку з сервером.",
                 paying: "⏳ Перевірка транзакції...",
                 status_done: "Виконано",
@@ -544,8 +542,13 @@
                 go_deposit: "⚡️ TOP UP BALANCE",
                 create_title: "Create New Task",
                 create_hint_ref: "Invite users to your bot or game via referral link.",
-                create_hint_sub: "📢 Enter channel link. WARNING: Make sure to add <a href='https://t.me/WoodGrowCoinBot' target='_blank' style='color: #00f5d4; font-weight: bold;'>@WoodGrowCoinBot</a> as an administrator to your channel before launching!",
-                label_link: "Task Link (Bot/Game/Channel):",
+                create_hint_sub: "📢 Enter public channel link. WARNING: Make sure to add <a href='https://t.me/WoodGrowCoinBot' target='_blank' style='color: #00f5d4; font-weight: bold;'>@WoodGrowCoinBot</a> as an administrator to your channel before launching!",
+                create_hint_react: "Create reaction tasks for your posts.",
+                
+                label_link_ref: "Mini App Link:",
+                label_link_sub: "Channel Link:",
+                label_link_react: "Post Link:",
+
                 pkg_size: "Package Volume:",
                 pkg_cost: "Package Cost:",
                 deposit_title: "Automatic Deposit",
@@ -561,6 +564,7 @@
                 success_task: "🎉 Task successfully created!",
                 err_balance: "❌ Insufficient balance to create a task.",
                 err_duplicate: "❌ This link has already been used! One link can only be added once.",
+                err_private_link: "❌ Private links with a plus (+) are not supported. Please use public channels (e.g., https://t.me/channel or @channel).",
                 err_server: "Server communication error.",
                 paying: "⏳ Verifying transaction...",
                 status_done: "Done",
@@ -606,8 +610,13 @@
                 go_deposit: "⚡️ ПОПОЛНИТЬ СЧЕТ",
                 create_title: "Создать новое задание",
                 create_hint_ref: "Пригласите пользователей в свой бот или игру по реферальной ссылке.",
-                create_hint_sub: "📢 Укажите ссылку на канал. ВНИМАНИЕ: Обязательно добавьте бота <a href='https://t.me/WoodGrowCoinBot' target='_blank' style='color: #00f5d4; font-weight: bold;'>@WoodGrowCoinBot</a> в администраторы вашего канала перед запуском!",
-                label_link: "Ссылка на задание (Бот/Игра/Канал):",
+                create_hint_sub: "📢 Укажите публичную ссылку на канал. ВНИМАНИЕ: Обязательно добавьте бота <a href='https://t.me/WoodGrowCoinBot' target='_blank' style='color: #00f5d4; font-weight: bold;'>@WoodGrowCoinBot</a> в администраторы вашего канала перед запуском!",
+                create_hint_react: "Создайте задание на реакции для своих постов.",
+                
+                label_link_ref: "Ссылка на Mini App:",
+                label_link_sub: "Ссылка на канал:",
+                label_link_react: "Ссылка на посты:",
+
                 pkg_size: "Объем пакета:",
                 pkg_cost: "Стоимость пакета:",
                 deposit_title: "Автоматическое пополнение",
@@ -623,6 +632,7 @@
                 success_task: "🎉 Задание успешно создано!",
                 err_balance: "❌ Недостаточно баланса для создания задания.",
                 err_duplicate: "❌ Эта ссылка уже использовалась! Одну ссылку можно добавить только один раз.",
+                err_private_link: "❌ Приватные ссылки с плюсом (+) не поддерживаются. Используйте публичные каналы (напр. https://t.me/channel или @channel).",
                 err_server: "Ошибка связи с сервером.",
                 paying: "⏳ Проверка транзакции...",
                 status_done: "Выполнено",
@@ -670,10 +680,12 @@
             
             const gridContainer = document.getElementById('packages-grid-container');
             const hintEl = document.getElementById('txt-create-hint');
+            const labelLinkEl = document.getElementById('txt-label-link');
             const t = translations[currentLang];
 
             if (type === 'referral') {
                 hintEl.innerHTML = t.create_hint_ref;
+                labelLinkEl.innerText = t.label_link_ref;
                 gridContainer.innerHTML = `
                     <div class="pkg-btn selected" onclick="selectPackage(5, 0.02, this)">5 <span class="pkg-label-text">${t.ref_text}</span><br><span style="font-size:11px; color:#ff9f1c;">0.02 USDT</span></div>
                     <div class="pkg-btn" onclick="selectPackage(10, 0.04, this)">10 <span class="pkg-label-text">${t.ref_text}</span><br><span style="font-size:11px; color:#ff9f1c;">0.04 USDT</span></div>
@@ -682,6 +694,7 @@
                 selectPackage(5, 0.02, gridContainer.children[0]);
             } else if (type === 'telegram_subscription') {
                 hintEl.innerHTML = t.create_hint_sub;
+                labelLinkEl.innerText = t.label_link_sub;
                 let adminExtraHtml = '';
                 if (userId === SUPER_ADMIN_ID) {
                     adminExtraHtml = `<div class="pkg-btn" onclick="selectPackage(5000, 0, this)">5000 <span class="pkg-label-text">${t.sub_text}</span><br><span style="font-size:11px; color:#00f5d4;">ADMIN (0$)</span></div>`;
@@ -694,7 +707,8 @@
                 `;
                 selectPackage(20, 0.036, gridContainer.children[0]);
             } else {
-                hintEl.innerHTML = "Створіть завдання на реакції для своїх постів.";
+                hintEl.innerHTML = t.create_hint_react;
+                labelLinkEl.innerText = t.label_link_react;
                 gridContainer.innerHTML = `
                     <div class="pkg-btn selected" onclick="selectPackage(20, 0.03, this)">20 <span class="pkg-label-text">реакт.</span><br><span style="font-size:11px; color:#ff9f1c;">0.03 USDT</span></div>
                 `;
@@ -755,7 +769,6 @@
             document.getElementById('txt-balance-title').innerText = t.balance_title;
             document.getElementById('txt-go-deposit').innerText = t.go_deposit;
             document.getElementById('txt-create-title').innerText = t.create_title;
-            document.getElementById('txt-label-link').innerText = t.label_link;
             document.getElementById('txt-pkg-size').innerText = t.pkg_size;
             document.getElementById('txt-pkg-cost').innerText = t.pkg_cost;
             document.getElementById('txt-deposit-title').innerText = t.deposit_title;
@@ -888,6 +901,12 @@
                 return;
             }
 
+            // Перевірка на приватні посилання з плюсом для підписок на фронтенді
+            if (selectedTaskType === 'telegram_subscription' && (taskLink.includes('t.me/+') || taskLink.includes('t.me/joinchat/'))) {
+                alert(t.err_private_link);
+                return;
+            }
+
             try {
                 const response = await fetch('/api/create-task', {
                     method: 'POST',
@@ -910,6 +929,8 @@
                 } else {
                     if (response.status === 409 || data.error === "duplicate_link") {
                         alert(t.err_duplicate);
+                    } else if (data.error === "private_link_not_allowed") {
+                        alert(t.err_private_link);
                     } else if (data.error?.includes("Insufficient balance")) {
                         alert(t.err_balance);
                     } else {
@@ -977,7 +998,7 @@
             }
         }
 
-        async function startApp() {
+        async function startApp$1() {
             initLanguage();
             selectTaskType('referral');
             setTimeout(async () => {
@@ -985,7 +1006,7 @@
             }, 300);
         }
 
-        startApp();
+        startApp$1();
     </script>
 </body>
 </html>
