@@ -1,3 +1,5 @@
+// api/cancel-task.js
+
 import admin from 'firebase-admin';
 
 if (!admin.apps.length) {
@@ -64,18 +66,27 @@ export default async function handler(req, res) {
         }
 
         const campaign = campaigns[campaignId];
+
+        // БЛОКУВАННЯ СКАСУВАННЯ ДЛЯ ПІДПИСОК
+        if (campaign.type === 'telegram_subscription') {
+            return res.status(400).json({ 
+                error: 'telegram_subscription_cannot_be_cancelled',
+                error_ua: 'Завдання на підписку не підлягають скасуванню і працюють до повного вичерпання ліміту.' 
+            });
+        }
+
         const createdAt = campaign.created_at ? new Date(campaign.created_at).getTime() : 0;
         const now = Date.now();
         const hoursPassed = (now - createdAt) / (1000 * 60 * 60);
 
-        // Перевірка, чи минуло 24 години
+        // Перевірка, чи минуло 24 години (тільки для реакцій/інших)
         if (hoursPassed < 24) {
             return res.status(400).json({ error: 'Too early to cancel. 24 hours have not passed yet.' });
         }
 
         const currentViews = campaign.current_views || 0;
-        const totalViews = 20; // Фіксований обсяг пакету
-        const packageCost = 0.03; // Вартість пакета в USDT
+        const totalViews = campaign.ordered_views || 20; 
+        const packageCost = campaign.package_cost || (totalViews * 0.0015); // Динамічна вартість
 
         if (currentViews >= totalViews) {
             return res.status(400).json({ error: 'Campaign already completed' });
@@ -97,8 +108,7 @@ export default async function handler(req, res) {
             my_campaigns: campaigns
         });
 
-        // ✨ ✨ ✨ НОВИЙ ШОТ: Змінюємо статус глобального завдання на "cancelled",
-        // щоб воно автоматично зникло у користувачів в основній мінапці
+        // Змінюємо статус глобального завдання на "cancelled"
         const globalTaskQuery = db.ref('tasks').orderByChild('id').equalTo(campaignId);
         const taskSnap = await globalTaskQuery.once('value');
         if (taskSnap.exists()) {
