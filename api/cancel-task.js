@@ -79,23 +79,28 @@ export default async function handler(req, res) {
         const now = Date.now();
         const hoursPassed = (now - createdAt) / (1000 * 60 * 60);
 
-        // Перевірка, чи минуло 24 години (тільки для реакцій/інших)
+        // Перевірка, чи минуло 24 години
         if (hoursPassed < 24) {
             return res.status(400).json({ error: 'Too early to cancel. 24 hours have not passed yet.' });
         }
 
-        const currentViews = campaign.current_views || 0;
-        const totalViews = campaign.ordered_views || 20; 
-        const packageCost = campaign.package_cost || (totalViews * 0.0015); // Динамічна вартість
+        const currentViews = campaign.current_views || campaign.current_count || 0;
+        const totalViews = campaign.ordered_views || campaign.target_count || 20; 
 
         if (currentViews >= totalViews) {
             return res.status(400).json({ error: 'Campaign already completed' });
         }
 
-        // Розраховуємо вартість одного виконання та суму повернення за невикористані перегляди
-        const costPerView = packageCost / totalViews;
+        // Динамічне визначення ціни за 1 одиницю залежно від типу завдання
+        let pricePerUnit = 0.001; // За замовчуванням (реакції)
+        if (campaign.type === 'story_view') {
+            pricePerUnit = 0.00015;
+        } else if (campaign.type === 'referral') {
+            pricePerUnit = 0.004;
+        }
+
         const remainingViews = totalViews - currentViews;
-        const refundAmount = remainingViews * costPerView;
+        const refundAmount = remainingViews * pricePerUnit;
 
         const currentBalance = parseFloat(advData.balance) || 0;
         const newBalance = currentBalance + refundAmount;
