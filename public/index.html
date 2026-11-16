@@ -340,7 +340,12 @@
                         <span class="badge-status badge-active" id="txt-badge-active-1">Активно</span>
                     </div>
 
-                    <div class="task-type-btn active-task" id="type-referral" onclick="selectTaskType('referral')">
+                    <div class="task-type-btn active-task" id="type-story_view" onclick="selectTaskType('story_view')">
+                        <span id="txt-task-story">🔥 Розкрутка Telegram Story</span>
+                        <span class="badge-status badge-sub" id="txt-badge-story">NEW</span>
+                    </div>
+
+                    <div class="task-type-btn" id="type-referral" onclick="selectTaskType('referral')">
                         <span id="txt-task-ref">👥 Реферали в боти/ігри</span>
                         <span class="badge-status badge-active" id="txt-badge-new">Новинка</span>
                     </div>
@@ -459,11 +464,9 @@
         const SUPER_ADMIN_ID = "6043278492";
         let balance = 0.0000;
         let currentLang = 'en';
-        let selectedTaskType = 'referral';
-        let selectedPackageSize = 5;
-        let selectedPackageCost = 0.02;
-
-        let pendingRejectData = { taskId: null, submissionId: null };
+        let selectedTaskType = 'story_view';
+        let selectedPackageSize = 10;
+        let selectedPackageCost = 0.0015;
 
         const translations = {
             uk: {
@@ -476,10 +479,12 @@
                 create_hint_ref: "Запросіть користувачів у свій бот або гру за реферальним посиланням.",
                 create_hint_sub: "📢 Вкажіть публічне посилання на канал. УВАГА: Обов'язково додайте бота <a href='https://t.me/WoodGrowCoinBot' target='_blank' style='color: #00f5d4; font-weight: bold;'>@WoodGrowCoinBot</a> в адміністратори вашого каналу перед запуском!",
                 create_hint_react: "Створіть завдання на реакції для своїх постів.",
+                create_hint_story: "🔥 Вкажіть посилання на вашу Telegram Story у форматі: https://t.me/username/s/123",
                 
                 label_link_ref: "Посилання на Mini App:",
                 label_link_sub: "Посилання на канал:",
                 label_link_react: "Посилання на пости:",
+                label_link_story: "Посилання на Story:",
 
                 pkg_size: "Обсяг пакету:",
                 pkg_cost: "Вартість пакету:",
@@ -496,7 +501,8 @@
                 success_task: "🎉 Завдання успішно створено!",
                 err_balance: "❌ Недостатньо балансу для створення завдання.",
                 err_duplicate: "❌ Це посилання вже використовувалося! Одне посилання можна додати лише один раз.",
-                err_private_link: "❌ Приватні посилання з плюсом (+) не підтримуються. Використовуйте публічні канали (напр. https://t.me/channel або @channel).",
+                err_private_link: "❌ Приватні посилання з плюсом (+) не підтримуються. Використовуйте публічні канали (напр. https://t.me/channel hoặc @channel).",
+                err_story_link: "❌ Невірний формат посилання на історію. Використовуйте: https://t.me/username/s/123",
                 err_server: "Помилка зв'язку з сервером.",
                 paying: "⏳ Перевірка транзакції...",
                 status_done: "Виконано",
@@ -505,6 +511,7 @@
                 support_btn: "💬 Написати в підтримку",
                 task_types_header: "🎯 Види завдань",
                 task_react: "👍 Реакції на пости",
+                task_story: "🔥 Розкрутка Telegram Story",
                 task_ref: "👥 Реферали в боти/ігри",
                 task_sub: "📢 Підписка на Telegram-канали",
                 badge_active: "Активно",
@@ -513,23 +520,20 @@
                 select_pkg_label: "Оберіть пакет:",
                 unit_refs: "рефералів",
                 unit_subs: "підписок",
+                unit_views: "переглядів",
                 unit_exec: "виконань",
                 ref_text: "реф.",
                 sub_text: "підп.",
+                view_text: "пер.",
+                react_text: "реакт.",
                 wallet_copied: "Адресу гаманця успішно скопійовано!",
                 deposit_success: "🎉 Успішно! Баланс поповнено.",
                 deposit_error: "❌ Помилка перевірки: ",
                 alert_no_hash: "Будь ласка, введіть адресу вашого гаманця або хеш транзакції.",
-                alert_no_url: "Please enter a valid URL.",
-                reject_title: "❌ Причина відхилення",
-                reject_desc: "Оберіть причину, чому звіт відхилено:",
-                reason_1: "Не видно, що бот запущений",
-                reason_2: "Скріншот не той що потрібно",
-                modal_cancel: "Скасувати",
-                btn_approve: "✅ Прийняти",
-                btn_reject: "❌ Відхилити",
-                sub_label: "👤 Виконавець ID:",
-                sub_shot: "📸 Скріншот надіслано в особистий чат бота",
+                alert_no_url: "Будь ласка, введіть посилання.",
+                btn_cancel_task: "❌ Скасувати (через 24г)",
+                cancel_success: "🎉 Кампанію успішно скасовано, кошти повернуто на баланс!",
+                too_early_cancel: "⏳ Скасувати завдання можна лише через 24 години після створення.",
                 lbl_type: "Тип:",
                 lbl_prog: "Прогрес:",
                 info_box_html: "<b>💡 Як підтвердити поповнення:</b><br>1. Здійсніть переказ USDT на адресу вище.<br>2. Вкажіть сюди <b>Адресу вашого гаманця</b>, з якого зроблено переказ, або <b>Хеш транзакції</b> з історії.<br>3. Натисніть кнопку підтвердження нижче."
@@ -544,10 +548,12 @@
                 create_hint_ref: "Invite users to your bot or game via referral link.",
                 create_hint_sub: "📢 Enter public channel link. WARNING: Make sure to add <a href='https://t.me/WoodGrowCoinBot' target='_blank' style='color: #00f5d4; font-weight: bold;'>@WoodGrowCoinBot</a> as an administrator to your channel before launching!",
                 create_hint_react: "Create reaction tasks for your posts.",
+                create_hint_story: "🔥 Enter your Telegram Story link in format: https://t.me/username/s/123",
                 
                 label_link_ref: "Mini App Link:",
                 label_link_sub: "Channel Link:",
                 label_link_react: "Post Link:",
+                label_link_story: "Story Link:",
 
                 pkg_size: "Package Volume:",
                 pkg_cost: "Package Cost:",
@@ -565,6 +571,7 @@
                 err_balance: "❌ Insufficient balance to create a task.",
                 err_duplicate: "❌ This link has already been used! One link can only be added once.",
                 err_private_link: "❌ Private links with a plus (+) are not supported. Please use public channels (e.g., https://t.me/channel or @channel).",
+                err_story_link: "❌ Invalid story link format. Use: https://t.me/username/s/123",
                 err_server: "Server communication error.",
                 paying: "⏳ Verifying transaction...",
                 status_done: "Done",
@@ -573,6 +580,7 @@
                 support_btn: "💬 Contact Support",
                 task_types_header: "🎯 Task Types",
                 task_react: "👍 Post Reactions",
+                task_story: "🔥 Telegram Story Views",
                 task_ref: "👥 Referrals to bots/games",
                 task_sub: "📢 Telegram Channel Subscriptions",
                 badge_active: "Active",
@@ -581,23 +589,20 @@
                 select_pkg_label: "Select package:",
                 unit_refs: "referrals",
                 unit_subs: "subscriptions",
+                unit_views: "views",
                 unit_exec: "executions",
                 ref_text: "ref.",
                 sub_text: "subs.",
+                view_text: "views",
+                react_text: "react.",
                 wallet_copied: "Wallet address successfully copied!",
                 deposit_success: "🎉 Success! Balance topped up.",
                 deposit_error: "❌ Verification error: ",
                 alert_no_hash: "Please enter your wallet address or transaction hash.",
                 alert_no_url: "Please enter a valid URL.",
-                reject_title: "❌ Rejection Reason",
-                reject_desc: "Select the reason for rejecting the submission:",
-                reason_1: "Bot launch not visible",
-                reason_2: "Incorrect screenshot",
-                modal_cancel: "Cancel",
-                btn_approve: "✅ Approve",
-                btn_reject: "❌ Reject",
-                sub_label: "👤 User ID:",
-                sub_shot: "📸 Screenshot sent to bot private chat",
+                btn_cancel_task: "❌ Cancel (after 24h)",
+                cancel_success: "🎉 Campaign successfully cancelled, funds refunded to balance!",
+                too_early_cancel: "⏳ You can cancel the task only 24 hours after creation.",
                 lbl_type: "Type:",
                 lbl_prog: "Progress:",
                 info_box_html: "<b>💡 How to confirm deposit:</b><br>1. Transfer USDT to the address above.<br>2. Enter your <b>Wallet Address</b> (from which you transferred) or <b>Transaction Hash</b> here.<br>3. Click the confirmation button below."
@@ -612,10 +617,12 @@
                 create_hint_ref: "Пригласите пользователей в свой бот или игру по реферальной ссылке.",
                 create_hint_sub: "📢 Укажите публичную ссылку на канал. ВНИМАНИЕ: Обязательно добавьте бота <a href='https://t.me/WoodGrowCoinBot' target='_blank' style='color: #00f5d4; font-weight: bold;'>@WoodGrowCoinBot</a> в администраторы вашего канала перед запуском!",
                 create_hint_react: "Создайте задание на реакции для своих постов.",
+                create_hint_story: "🔥 Укажите ссылку на вашу Telegram Story в формате: https://t.me/username/s/123",
                 
                 label_link_ref: "Ссылка на Mini App:",
                 label_link_sub: "Ссылка на канал:",
                 label_link_react: "Ссылка на посты:",
+                label_link_story: "Ссылка на Story:",
 
                 pkg_size: "Объем пакета:",
                 pkg_cost: "Стоимость пакета:",
@@ -633,6 +640,7 @@
                 err_balance: "❌ Недостаточно баланса для создания задания.",
                 err_duplicate: "❌ Эта ссылка уже использовалась! Одну ссылку можно добавить только один раз.",
                 err_private_link: "❌ Приватные ссылки с плюсом (+) не поддерживаются. Используйте публичные каналы (напр. https://t.me/channel или @channel).",
+                err_story_link: "❌ Неверный формат ссылки на историю. Используйте: https://t.me/username/s/123",
                 err_server: "Ошибка связи с сервером.",
                 paying: "⏳ Проверка транзакции...",
                 status_done: "Выполнено",
@@ -641,6 +649,7 @@
                 support_btn: "💬 Написать в поддержку",
                 task_types_header: "🎯 Виды заданий",
                 task_react: "👍 Реакции на посты",
+                task_story: "🔥 Раскрутка Telegram Story",
                 task_ref: "👥 Рефералы в боты/игры",
                 task_sub: "📢 Подписка на Telegram-каналы",
                 badge_active: "Активно",
@@ -649,23 +658,20 @@
                 select_pkg_label: "Выберите пакет:",
                 unit_refs: "рефералов",
                 unit_subs: "подписок",
+                unit_views: "просмотров",
                 unit_exec: "выполнений",
                 ref_text: "реф.",
                 sub_text: "подп.",
+                view_text: "прос.",
+                react_text: "реакт.",
                 wallet_copied: "Адрес кошелька успешно скопирован!",
                 deposit_success: "🎉 Успешно! Баланс пополнен.",
                 deposit_error: "❌ Ошибка проверки: ",
                 alert_no_hash: "Пожалуйста, введите адрес вашего кошелька или хэш транзакции.",
-                alert_no_url: "Please enter a valid URL.",
-                reject_title: "❌ Причина отклонения",
-                reject_desc: "Выберите почему отклонен отчет:",
-                reason_1: "Не видно запуск бота",
-                reason_2: "Не тот скриншот",
-                modal_cancel: "Отмена",
-                btn_approve: "✅ Принять",
-                btn_reject: "❌ Отклонить",
-                sub_label: "👤 Пользователь ID:",
-                sub_shot: "📸 Скриншот отправлен в бот",
+                alert_no_url: "Пожалуйста, введите ссылку.",
+                btn_cancel_task: "❌ Отменить (через 24ч)",
+                cancel_success: "🎉 Кампания успешно отменена, средства возвращены на баланс!",
+                too_early_cancel: "⏳ Отменить задание можно только через 24 часа после создания.",
                 lbl_type: "Тип:",
                 lbl_prog: "Прогресс:",
                 info_box_html: "<b>💡 Как подтвердить пополнение:</b><br>1. Совершите перевод USDT на адрес выше.<br>2. Укажите сюда <b>Адрес вашего кошелька</b> или <b>Хэш транзакции</b>.<br>3. Нажмите кнопку подтверждения."
@@ -675,6 +681,7 @@
         function selectTaskType(type) {
             selectedTaskType = type;
             document.getElementById('type-reaction').className = type === 'reaction' ? 'task-type-btn active-task' : 'task-type-btn';
+            document.getElementById('type-story_view').className = type === 'story_view' ? 'task-type-btn active-task' : 'task-type-btn';
             document.getElementById('type-referral').className = type === 'referral' ? 'task-type-btn active-task' : 'task-type-btn';
             document.getElementById('type-telegram_subscription').className = type === 'telegram_subscription' ? 'task-type-btn active-task' : 'task-type-btn';
             
@@ -683,7 +690,25 @@
             const labelLinkEl = document.getElementById('txt-label-link');
             const t = translations[currentLang];
 
-            if (type === 'referral') {
+            if (type === 'story_view') {
+                hintEl.innerHTML = t.create_hint_story;
+                labelLinkEl.innerText = t.label_link_story;
+                gridContainer.innerHTML = `
+                    <div class="pkg-btn selected" onclick="selectPackage(10, 0.0015, this)">10 <span class="pkg-label-text">${t.view_text}</span><br><span style="font-size:11px; color:#ff9f1c;">0.0015 USDT</span></div>
+                    <div class="pkg-btn" onclick="selectPackage(20, 0.003, this)">20 <span class="pkg-label-text">${t.view_text}</span><br><span style="font-size:11px; color:#ff9f1c;">0.003 USDT</span></div>
+                    <div class="pkg-btn" onclick="selectPackage(50, 0.0075, this)">50 <span class="pkg-label-text">${t.view_text}</span><br><span style="font-size:11px; color:#ff9f1c;">0.0075 USDT</span></div>
+                `;
+                selectPackage(10, 0.0015, gridContainer.children[0]);
+            } else if (type === 'reaction') {
+                hintEl.innerHTML = t.create_hint_react;
+                labelLinkEl.innerText = t.label_link_react;
+                gridContainer.innerHTML = `
+                    <div class="pkg-btn selected" onclick="selectPackage(10, 0.01, this)">10 <span class="pkg-label-text">${t.react_text}</span><br><span style="font-size:11px; color:#ff9f1c;">0.01 USDT</span></div>
+                    <div class="pkg-btn" onclick="selectPackage(20, 0.02, this)">20 <span class="pkg-label-text">${t.react_text}</span><br><span style="font-size:11px; color:#ff9f1c;">0.02 USDT</span></div>
+                    <div class="pkg-btn" onclick="selectPackage(50, 0.05, this)">50 <span class="pkg-label-text">${t.react_text}</span><br><span style="font-size:11px; color:#ff9f1c;">0.05 USDT</span></div>
+                `;
+                selectPackage(10, 0.01, gridContainer.children[0]);
+            } else if (type === 'referral') {
                 hintEl.innerHTML = t.create_hint_ref;
                 labelLinkEl.innerText = t.label_link_ref;
                 gridContainer.innerHTML = `
@@ -706,13 +731,6 @@
                     ${adminExtraHtml}
                 `;
                 selectPackage(20, 0.036, gridContainer.children[0]);
-            } else {
-                hintEl.innerHTML = t.create_hint_react;
-                labelLinkEl.innerText = t.label_link_react;
-                gridContainer.innerHTML = `
-                    <div class="pkg-btn selected" onclick="selectPackage(20, 0.03, this)">20 <span class="pkg-label-text">реакт.</span><br><span style="font-size:11px; color:#ff9f1c;">0.03 USDT</span></div>
-                `;
-                selectPackage(20, 0.03, gridContainer.children[0]);
             }
             updateButtonsUI();
         }
@@ -730,9 +748,10 @@
             let unitLabel = t.unit_exec;
             if (selectedTaskType === 'referral') unitLabel = t.unit_refs;
             if (selectedTaskType === 'telegram_subscription') unitLabel = t.unit_subs;
+            if (selectedTaskType === 'story_view') unitLabel = t.unit_views;
 
             document.getElementById('txt-pkg-value').innerText = `${selectedPackageSize} ${unitLabel}`;
-            document.getElementById('txt-pkg-cost-val').innerText = `${selectedPackageCost.toFixed(3)} USDT`;
+            document.getElementById('txt-pkg-cost-val').innerText = `${selectedPackageCost.toFixed(4)} USDT`;
             updateButtonsUI();
         }
 
@@ -776,9 +795,11 @@
             
             document.getElementById('txt-task-types-header').innerText = t.task_types_header;
             document.getElementById('txt-task-react').innerText = t.task_react;
+            document.getElementById('txt-task-story').innerText = t.task_story;
             document.getElementById('txt-task-ref').innerText = t.task_ref;
             document.getElementById('txt-task-sub').innerText = t.task_sub;
             document.getElementById('txt-badge-active-1').innerText = t.badge_active;
+            document.getElementById('txt-badge-story').innerText = t.badge_sub;
             document.getElementById('txt-badge-new').innerText = t.badge_new;
             document.getElementById('txt-badge-sub').innerText = t.badge_sub;
             document.getElementById('txt-select-pkg-label').innerText = t.select_pkg_label;
@@ -806,7 +827,7 @@
 
         function updateButtonsUI() {
             const btnSubmit = document.getElementById('btn-submit-task');
-            let costStr = (userId === SUPER_ADMIN_ID && selectedTaskType === 'telegram_subscription' && selectedPackageSize === 5000) ? "0.00 USDT" : `${selectedPackageCost.toFixed(3)} USDT`;
+            let costStr = (userId === SUPER_ADMIN_ID && selectedTaskType === 'telegram_subscription' && selectedPackageSize === 5000) ? "0.00 USDT" : `${selectedPackageCost.toFixed(4)} USDT`;
             if (currentLang === 'uk') {
                 btnSubmit.innerText = `Запустити кампанію (${costStr})`;
             } else if (currentLang === 'ru') {
@@ -901,6 +922,15 @@
                 return;
             }
 
+            // Перевірка формату посилання на історію
+            if (selectedTaskType === 'story_view') {
+                const storyRegex = /(https:\/\/)?t\.me\/[a-zA-Z0-9_]+\/s\/\d+/;
+                if (!storyRegex.test(taskLink)) {
+                    alert(t.err_story_link);
+                    return;
+                }
+            }
+
             // Перевірка на приватні посилання з плюсом для підписок на фронтенді
             if (selectedTaskType === 'telegram_subscription' && (taskLink.includes('t.me/+') || taskLink.includes('t.me/joinchat/'))) {
                 alert(t.err_private_link);
@@ -931,6 +961,8 @@
                         alert(t.err_duplicate);
                     } else if (data.error === "private_link_not_allowed") {
                         alert(t.err_private_link);
+                    } else if (data.error === "invalid_story_link") {
+                        alert(t.err_story_link);
                     } else if (data.error?.includes("Insufficient balance")) {
                         alert(t.err_balance);
                     } else {
@@ -938,6 +970,37 @@
                     }
                 }
             } catch (err) {
+                alert(t.err_server);
+            }
+        }
+
+        async function cancelCampaign(campaignId) {
+            const t = translations[currentLang];
+            if (!confirm("Ви впевнені, що хочете скасувати завдання та повернути кошти?")) return;
+
+            try {
+                const response = await fetch('/api/cancel-task', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        initData: window.Telegram.WebApp.initData,
+                        campaignId: campaignId
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    alert(t.cancel_success);
+                    fetchAdvertiserData();
+                } else {
+                    if (data.error === 'Too early to cancel. 24 hours have not passed yet.') {
+                        alert(t.too_early_cancel);
+                    } else {
+                        alert(data.error || t.err_server);
+                    }
+                }
+            } catch (e) {
                 alert(t.err_server);
             }
         }
@@ -975,6 +1038,11 @@
                             
                             activeCount++;
 
+                            // Розрахунок часу для кнопки скасування (24 години)
+                            let createdAt = camp.created_at ? new Date(camp.created_at).getTime() : 0;
+                            let hoursPassed = (Date.now() - createdAt) / (1000 * 60 * 60);
+                            let canCancel = camp.type !== 'telegram_subscription' && hoursPassed >= 24;
+
                             listDiv.innerHTML += `
                                 <div class="campaign-item">
                                     <div style="font-size:12px; color:var(--neon-aqua); word-break:break-all;">🔗 ${camp.link}</div>
@@ -982,6 +1050,11 @@
                                         <span>${t.lbl_type} <b>${camp.type || 'reaction'}</b></span>
                                         <span>${t.lbl_prog} <b style="color:#ff9f1c">${current} / ${target}</b></span>
                                     </div>
+                                    ${camp.type !== 'telegram_subscription' ? `
+                                        <button class="btn" style="margin-top: 10px; padding: 8px; font-size: 11px; background: ${canCancel ? 'rgba(255,68,68,0.2)' : '#1a2226'}; color: ${canCancel ? '#ff4444' : '#4a555a'}; border: 1px solid ${canCancel ? '#ff4444' : '#2a353a'}; box-shadow: none;" onclick="cancelCampaign('${campId}')">
+                                            ${canCancel ? t.btn_cancel_task : '⏳ Скасування доступне через 24г'}
+                                        </button>
+                                    ` : ''}
                                 </div>
                             `;
                         });
@@ -1000,7 +1073,7 @@
 
         async function startApp$1() {
             initLanguage();
-            selectTaskType('referral');
+            selectTaskType('story_view');
             setTimeout(async () => {
                 await fetchAdvertiserData();
             }, 300);
