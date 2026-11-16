@@ -501,7 +501,7 @@
                 success_task: "🎉 Завдання успішно створено!",
                 err_balance: "❌ Недостатньо балансу для створення завдання.",
                 err_duplicate: "❌ Це посилання вже використовувалося! Одне посилання можна додати лише один раз.",
-                err_private_link: "❌ Приватні посилання з плюсом (+) не підтримуються. Використовуйте публічні канали (напр. https://t.me/channel hoặc @channel).",
+                err_private_link: "❌ Приватні посилання з плюсом (+) не підтримуються. Використовуйте публічні канали (напр. https://t.me/channel або @channel).",
                 err_story_link: "❌ Невірний формат посилання на історію. Використовуйте: https://t.me/username/s/123",
                 err_server: "Помилка зв'язку з сервером.",
                 paying: "⏳ Перевірка транзакції...",
@@ -531,7 +531,6 @@
                 deposit_error: "❌ Помилка перевірки: ",
                 alert_no_hash: "Будь ласка, введіть адресу вашого гаманця або хеш транзакції.",
                 alert_no_url: "Будь ласка, введіть посилання.",
-                btn_cancel_task: "❌ Скасувати (через 24г)",
                 cancel_success: "🎉 Кампанію успішно скасовано, кошти повернуто на баланс!",
                 too_early_cancel: "⏳ Скасувати завдання можна лише через 24 години після створення.",
                 lbl_type: "Тип:",
@@ -600,7 +599,6 @@
                 deposit_error: "❌ Verification error: ",
                 alert_no_hash: "Please enter your wallet address or transaction hash.",
                 alert_no_url: "Please enter a valid URL.",
-                btn_cancel_task: "❌ Cancel (after 24h)",
                 cancel_success: "🎉 Campaign successfully cancelled, funds refunded to balance!",
                 too_early_cancel: "⏳ You can cancel the task only 24 hours after creation.",
                 lbl_type: "Type:",
@@ -669,7 +667,6 @@
                 deposit_error: "❌ Ошибка проверки: ",
                 alert_no_hash: "Пожалуйста, введите адрес вашего кошелька или хэш транзакции.",
                 alert_no_url: "Пожалуйста, введите ссылку.",
-                btn_cancel_task: "❌ Отменить (через 24ч)",
                 cancel_success: "🎉 Кампания успешно отменена, средства возвращены на баланс!",
                 too_early_cancel: "⏳ Отменить задание можно только через 24 часа после создания.",
                 lbl_type: "Тип:",
@@ -1041,20 +1038,25 @@
                             // Розрахунок часу для кнопки скасування (24 години)
                             let createdAt = camp.created_at ? new Date(camp.created_at).getTime() : 0;
                             let hoursPassed = (Date.now() - createdAt) / (1000 * 60 * 60);
-                            let canCancel = camp.type !== 'telegram_subscription' && hoursPassed >= 24;
+                            
+                            // Скасування доступне ТІЛЬКИ для reaction та story_view через 24 години
+                            let isCancellableType = (camp.type === 'reaction' || camp.type === 'story_view');
+                            let canCancel = isCancellableType && hoursPassed >= 24;
 
                             listDiv.innerHTML += `
                                 <div class="campaign-item">
                                     <div style="font-size:12px; color:var(--neon-aqua); word-break:break-all;">🔗 ${camp.link}</div>
-                                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:6px;">
+                                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:6px; align-items:center;">
                                         <span>${t.lbl_type} <b>${camp.type || 'reaction'}</b></span>
-                                        <span>${t.lbl_prog} <b style="color:#ff9f1c">${current} / ${target}</b></span>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span>${t.lbl_prog} <b style="color:#ff9f1c">${current} / ${target}</b></span>
+                                            ${isCancellableType ? `
+                                                <button style="padding: 3px 8px; font-size: 10px; font-weight: bold; border-radius: 6px; background: ${canCancel ? 'rgba(255,68,68,0.2)' : '#1a2226'}; color: ${canCancel ? '#ff4444' : '#4a555a'}; border: 1px solid ${canCancel ? '#ff4444' : '#2a353a'}; cursor: ${canCancel ? 'pointer' : 'default'};" onclick="${canCancel ? `cancelCampaign('${campId}')` : ''}">
+                                                    ${canCancel ? '❌ Скасувати' : '⏳ 24г'}
+                                                </button>
+                                            ` : ''}
+                                        </div>
                                     </div>
-                                    ${camp.type !== 'telegram_subscription' ? `
-                                        <button class="btn" style="margin-top: 10px; padding: 8px; font-size: 11px; background: ${canCancel ? 'rgba(255,68,68,0.2)' : '#1a2226'}; color: ${canCancel ? '#ff4444' : '#4a555a'}; border: 1px solid ${canCancel ? '#ff4444' : '#2a353a'}; box-shadow: none;" onclick="cancelCampaign('${campId}')">
-                                            ${canCancel ? t.btn_cancel_task : '⏳ Скасування доступне через 24г'}
-                                        </button>
-                                    ` : ''}
                                 </div>
                             `;
                         });
