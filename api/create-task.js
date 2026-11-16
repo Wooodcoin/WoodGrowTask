@@ -61,6 +61,19 @@ export default async function handler(req, res) {
             }
         }
 
+        // === ВАЛІДАЦІЯ ПОСИЛАННЯ ДЛЯ STORY VIEW ===
+        if (taskType === 'story_view') {
+            const trimmedLink = taskLink.trim();
+            // Формат: t.me/<username>/s/<story_id> або https://t.me/...
+            const storyRegex = /(https:\/\/)?t\.me\/[a-zA-Z0-9_]+\/s\/\d+/;
+            if (!storyRegex.test(trimmedLink)) {
+                return res.status(400).json({ 
+                    error: 'invalid_story_link', 
+                    error_ua: 'Невірний формат посилання на історію. Використовуйте формат: https://t.me/username/s/123' 
+                });
+            }
+        }
+
         // === ПЕРЕВІРКА: ОДНЕ ПОСИЛАННЯ — ОДНЕ ЗАВДАННЯ НАЗАВЖДИ ===
         const tasksSnapshot = await db.ref('tasks').orderByChild('link').equalTo(taskLink).once('value');
         if (tasksSnapshot.exists()) {
@@ -79,25 +92,27 @@ export default async function handler(req, res) {
         let targetCount = 0;
         let rewardPerUnit = 0;
         let pricePerUser = 0;
+        const allowedPackages = [10, 20, 50];
 
         if (taskType === 'referral') {
-            const allowedPackages = [5, 10, 20];
+            const refPackages = [5, 10, 20];
             const size = parseInt(packageSize) || 5;
 
-            if (!allowedPackages.includes(size)) {
+            if (!refPackages.includes(size)) {
                 return res.status(400).json({ error: 'Invalid package size. Allowed for referral: 5, 10, 20' });
             }
 
             targetCount = size;                    
             rewardPerUnit = 0.002;                 
-            taskCost = size * 0.004;               
+            pricePerUser = 0.004;
+            taskCost = size * pricePerUser;               
         } 
         else if (taskType === 'telegram_subscription') {
             const size = parseInt(packageSize);
-            const allowedPackages = isSuperAdmin ? [20, 50, 100, 5000] : [20, 50, 100];
+            const subPackages = isSuperAdmin ? [20, 50, 100, 5000] : [20, 50, 100];
 
-            if (!allowedPackages.includes(size)) {
-                return res.status(400).json({ error: `Invalid package size. Allowed: ${allowedPackages.join(', ')}` });
+            if (!subPackages.includes(size)) {
+                return res.status(400).json({ error: `Invalid package size. Allowed: ${subPackages.join(', ')}` });
             }
 
             targetCount = size;
@@ -105,11 +120,30 @@ export default async function handler(req, res) {
             pricePerUser = 0.0018;                 
             taskCost = size * pricePerUser;        
         } 
+        else if (taskType === 'story_view') {
+            const size = parseInt(packageSize) || 10;
+
+            if (!allowedPackages.includes(size)) {
+                return res.status(400).json({ error: `Invalid package size. Allowed for story_view: ${allowedPackages.join(', ')}` });
+            }
+
+            targetCount = size;
+            rewardPerUnit = 0.0001;
+            pricePerUser = 0.00015;
+            taskCost = size * pricePerUser;
+        }
         else {
-            targetCount = 20;
+            // Реакції (базовий тип / else)
+            const size = parseInt(packageSize) || 20;
+
+            if (!allowedPackages.includes(size)) {
+                return res.status(400).json({ error: `Invalid package size. Allowed for reactions: ${allowedPackages.join(', ')}` });
+            }
+
+            targetCount = size;
             rewardPerUnit = 0.0005;
-            pricePerUser = 0.0015; 
-            taskCost = 0.03;
+            pricePerUser = 0.001; // Змінено з 0.0015 на 0.001
+            taskCost = size * pricePerUser;
         }
 
         if (!isSuperAdmin) {
@@ -142,7 +176,8 @@ export default async function handler(req, res) {
             target_count: targetCount,     
             current_count: 0,
             status: "active",
-            createdAt: timestamp
+            createdAt: timestamp,
+            created_at: timestamp // дублюємо для сумісності з перевіркою 24 годин
         };
 
         await globalTasksRef.set(newTaskData);
