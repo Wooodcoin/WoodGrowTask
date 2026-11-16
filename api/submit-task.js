@@ -11,7 +11,7 @@ if (!admin.apps.length) {
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
             databaseURL: "https://woodgrowbot-default-rtdb.europe-west1.firebasedatabase.app",
-            storageBucket: "woodgrowbot.firebasestorage.app" // Додали бакет для файлів
+            storageBucket: "woodgrowbot.firebasestorage.app"
         });
     } catch (error) {
         console.error('Firebase initialization error:', error);
@@ -21,7 +21,7 @@ if (!admin.apps.length) {
 const db = admin.database();
 const storage = admin.storage().bucket();
 
-// Допоміжна функція для парсингу multipart/form-data на Vercel через busboy
+// Допоміжна функція для парсингу multipart/form-data (потрібна для рефералів зі скріншотами)
 const parseMultipartForm = (req) => {
     return new Promise((resolve, reject) => {
         const busboy = Busboy({ headers: req.headers });
@@ -63,7 +63,7 @@ const parseMultipartForm = (req) => {
 
 export const config = {
     api: {
-        bodyParser: false, // Вимикаємо стандартний парсер Vercel, щоб працював Busboy для файлів
+        bodyParser: false, // Вимикаємо стандартний парсер для підтримки multipart/form-data
     },
 };
 
@@ -74,16 +74,12 @@ export default async function handler(req, res) {
     if (!BOT_TOKEN) return res.status(500).json({ error: 'Server configuration missing' });
 
     try {
-        // Парсимо дані форми та файл
+        // Парсимо дані форми (працює як для JSON-подібних полів, так і для multipart)
         const { fields, file } = await parseMultipartForm(req);
         const { userId, initData, taskId } = fields;
 
         if (!userId || !initData || !taskId) {
             return res.status(400).json({ error: 'Missing parameters' });
-        }
-
-        if (!file) {
-            return res.status(400).json({ error: 'Screenshot file is required' });
         }
 
         // 1. Валідація Telegram InitData
@@ -113,6 +109,76 @@ export default async function handler(req, res) {
         }
 
         const taskData = taskSnap.val();
+        const taskType = taskData.type;
+
+        // ==========================================
+        // ГІЛКА А: АВТОМАТИЧНІ ЗАВДАННЯ (Story View, Реакції тощо)
+        // ==========================================
+        if (taskType === 'story_view' || taskType === 'reaction' || taskType === 'telegram_subscription') {
+            
+            // 1. Перевірка на унікальність: чи використав користувач це завдання раніше
+            const completionRef = db.ref(`task_completions/${taskId}/${userId}`);
+            const completionSnap = await completionRef.once('value');
+            if (completionSnap.exists()) {
+                return res.status(409).json({ error: 'You have already completed this task' });
+            }
+
+            // 2. Перевірка лімітів завдання
+            const currentCount = parseInt(taskData.current_count) || 0;
+            const targetCount = parseInt(taskData.target_count) || 0;
+            if (currentCount >= targetCount) {
+                return res.status(400).json({ error: 'Task is already completed' });
+            }
+
+            // 3. Визначення винагороди залежно від типу
+            let reward = parseFloat(taskData.reward) || 0.0001;
+            let systemCommission = 0.00005; // комісія платформи (наприклад, для сторіс)
+
+            if (taskType === 'reaction') {
+                reward = 0.0005;
+                systemCommission = 0.0005;
+            } else if (taskType === 'telegram_subscription') {
+                reward = 0.001;
+                systemCommission = 0.0008;
+            }
+
+            // 4. Нарахування коштів виконавцю
+            const userWalletRef = db.ref(`task_users/${userId}`);
+            const userWalletSnap = await userWalletRef.once('value');
+            let userBalance = 0;
+            if (userWalletSnap.exists()) {
+                userBalance = parseFloat(userWalletSnap.val().balance) || 0;
+            }
+
+            const newBalance = userBalance + reward;
+
+            // Використовуємо транзакцію/оновлення для безпеки
+            const updates = {};
+            updates[`task_users/${userId}/balance`] = newBalance;
+            updates[`task_completions/${taskId}/${userId}`] = true;
+            updates[`tasks/${taskId}/current_count`] = currentCount + 1;
+            updates[`task_users/${taskData.creatorId}/my_campaigns/${taskId}/current_views`] = currentCount + 1;
+
+            // Якщо досягнуто цільової кількості — закриваємо завдання
+            if (currentCount + 1 >= targetCount) {
+                updates[`tasks/${taskId}/status`] = 'completed';
+            }
+
+            await db.ref().update(updates);
+
+            return res.status(200).json({
+                success: true,
+                message: 'Task completed automatically and reward credited',
+                reward: reward
+            });
+        }
+
+        // ==========================================
+        // ГІЛКА Б: ЗАВДАННЯ З РУЧНОЮ МОДЕРАЦІЄЮ (Реферали)
+        // ==========================================
+        if (!file) {
+            return res.status(400).json({ error: 'Screenshot file is required for this task type' });
+        }
 
         // Перевіряємо чи виконавець вже не надсилав звіт
         const existingSubmissionsSnap = await db.ref(`task_submissions/${taskId}`).orderByChild('userId').equalTo(userId).once('value');
@@ -120,20 +186,19 @@ export default async function handler(req, res) {
             return res.status(409).json({ error: 'You have already submitted a report for this task' });
         }
 
-        // 2. Завантаження файлу у Firebase Storage
+        // Завантаження файлу у Firebase Storage
         const fileExtension = file.name.split('.').pop() || 'jpg';
         const fileName = `task_screenshots/${taskId}_${userId}_${Date.now()}.${fileExtension}`;
         const fileUpload = storage.file(fileName);
 
         await fileUpload.save(file.buffer, {
             metadata: { contentType: file.mimetype },
-            public: true, // Робімо файл публічним для перегляду рекламодавцем
+            public: true,
         });
 
-        // Формуємо публічне посилання на картинку у Firebase Storage
         const screenshotUrl = `https://storage.googleapis.com/${storage.name}/${fileName}`;
 
-        // 3. Збереження звіту в базу даних
+        // Збереження звіту для ручної модерації
         const submissionRef = db.ref(`task_submissions/${taskId}`).push();
         const submissionId = submissionRef.key;
         const timestamp = Date.now();
@@ -143,7 +208,7 @@ export default async function handler(req, res) {
             taskId: taskId,
             userId: userId,
             creatorId: taskData.creatorId,
-            screenshotUrl: screenshotUrl, // Тепер це пряме посилання на завантажений файл!
+            screenshotUrl: screenshotUrl,
             status: 'pending',
             submittedAt: timestamp,
             expiresAt: timestamp + (48 * 60 * 60 * 1000)
@@ -159,7 +224,7 @@ export default async function handler(req, res) {
         });
 
     } catch (e) {
-        console.error("Error submitting task with file:", e);
-        return res.status(500).json({ error: 'Server error during file upload or database transaction' });
+        console.error("Error in submit-task:", e);
+        return res.status(500).json({ error: 'Server error during task submission' });
     }
 }
