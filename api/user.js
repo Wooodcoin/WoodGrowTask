@@ -1,3 +1,5 @@
+// api/user.js (Advertiser Cabinet)
+
 import admin from 'firebase-admin';
 
 if (!admin.apps.length) {
@@ -55,18 +57,56 @@ export default async function handler(req, res) {
         }
 
         const userData = userSnapshot.val();
-
-        // Оскільки ми хочемо бачити актуальний прогрес (скільки лайків уже поставили), 
-        // нам потрібно підтягнути поточні значення current_views з глобальної гілки 'tasks'
         let myCampaigns = userData.my_campaigns || {};
         
         if (Object.keys(myCampaigns).length > 0) {
             for (let taskId in myCampaigns) {
+                const campaign = myCampaigns[taskId] || {};
                 const globalTaskSnapshot = await db.ref(`tasks/${taskId}`).once('value');
+
                 if (globalTaskSnapshot.exists()) {
                     const globalTask = globalTaskSnapshot.val();
-                    // Оновлюємо кількість переглядів/лайків у відповіді для фронтенду
-                    myCampaigns[taskId].current_views = globalTask.current_views || 0;
+                    const actualCount = parseInt(
+                        globalTask.current_count ??
+                        globalTask.current_views ??
+                        campaign.current_count ??
+                        campaign.current_views ??
+                        0
+                    ) || 0;
+
+                    myCampaigns[taskId].current_count = actualCount;
+                    myCampaigns[taskId].current_views = actualCount;
+                    if (globalTask.status) {
+                        myCampaigns[taskId].status = globalTask.status;
+                    }
+                    if (globalTask.type && !campaign.type) {
+                        myCampaigns[taskId].type = globalTask.type;
+                    }
+                }
+
+                // Підтягуємо заявки з task_submissions/${taskId} та об'єднуємо з my_campaigns/${taskId}/submissions
+                const campaignSubs = (campaign.submissions && typeof campaign.submissions === 'object')
+                    ? campaign.submissions
+                    : {};
+                const globalSubsSnapshot = await db.ref(`task_submissions/${taskId}`).once('value');
+                const globalSubs = globalSubsSnapshot.exists() ? globalSubsSnapshot.val() : {};
+
+                const mergedSubs = { ...campaignSubs };
+                for (const subId in globalSubs) {
+                    const gSub = globalSubs[subId] || {};
+                    const cSub = mergedSubs[subId] || {};
+                    const gModerated = gSub.moderatedAt || 0;
+                    const cModerated = cSub.moderatedAt || 0;
+
+                    if (gModerated >= cModerated || gSub.status !== 'pending') {
+                        mergedSubs[subId] = { ...cSub, ...gSub, id: gSub.id || subId };
+                    } else {
+                        mergedSubs[subId] = { ...gSub, ...cSub, id: cSub.id || subId };
+                    }
+                }
+
+                if (Object.keys(mergedSubs).length > 0) {
+                    myCampaigns[taskId].submissions = mergedSubs;
                 }
             }
         }
