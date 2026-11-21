@@ -130,6 +130,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 8px;
             width: 100%;
             border-radius: 10px;
             padding: 11px 14px;
@@ -152,15 +153,52 @@
         }
 
         .badge-status {
-            font-size: 10px;
-            padding: 3px 8px;
-            border-radius: 6px;
-            text-transform: uppercase;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 7px;
             font-weight: 800;
+            white-space: nowrap;
         }
 
-        .badge-active { background: rgba(0, 0, 0, 0.2); color: #fff; }
-        .badge-sub { background: rgba(0, 0, 0, 0.5); color: #00f5d4; border: 1px solid rgba(0, 245, 212, 0.3); }
+        .badge-price {
+            background: rgba(0, 0, 0, 0.45);
+            color: #00f5d4;
+            border: 1px solid rgba(0, 245, 212, 0.35);
+        }
+
+        .task-type-btn.active-task .badge-price {
+            background: rgba(4, 14, 18, 0.8);
+            color: #ffbf69;
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .category-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+            margin-bottom: 12px;
+            justify-content: center;
+        }
+
+        .category-pill {
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(0, 245, 212, 0.3);
+            color: #9fb3b5;
+            border-radius: 999px;
+            padding: 6px 11px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-pill.active {
+            background: rgba(0, 245, 212, 0.2);
+            border-color: var(--neon-aqua);
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 245, 212, 0.35);
+        }
 
         .packages-grid {
             display: grid;
@@ -381,6 +419,7 @@
             <div class="card">
                 <h3 id="txt-nav-campaigns">Прогрес завдань</h3>
                 <p style="color: #8b9e9f; font-size: 13px;" id="txt-campaigns-desc">Тут відображається статус ваших активних завдань та звіти користувачів.</p>
+                <div class="category-pills" id="campaigns-category-pills"></div>
                 <div id="campaigns-list">
                     <p style="color: #4a555a; font-style: italic;" id="txt-no-campaigns">У вас немає активних кампаній</p>
                 </div>
@@ -403,22 +442,22 @@
                     
                     <div class="task-type-btn" id="type-reaction" onclick="selectTaskType('reaction')">
                         <span id="txt-task-react">👍 Реакції на пости</span>
-                        <span class="badge-status badge-active" id="txt-badge-active-1">Активно</span>
+                        <span class="badge-status badge-price" id="txt-price-reaction">0.001 USDT / дія</span>
                     </div>
 
                     <div class="task-type-btn active-task" id="type-story_view" onclick="selectTaskType('story_view')">
                         <span id="txt-task-story">🔥 Розкрутка Telegram Story</span>
-                        <span class="badge-status badge-sub" id="txt-badge-story">NEW</span>
+                        <span class="badge-status badge-price" id="txt-price-story">0.00015 USDT / пер.</span>
                     </div>
 
                     <div class="task-type-btn" id="type-referral" onclick="selectTaskType('referral')">
                         <span id="txt-task-ref">👥 Реферали в боти/ігри</span>
-                        <span class="badge-status badge-active" id="txt-badge-new">Новинка</span>
+                        <span class="badge-status badge-price" id="txt-price-referral">0.004 USDT / реф.</span>
                     </div>
 
                     <div class="task-type-btn" id="type-telegram_subscription" onclick="selectTaskType('telegram_subscription')">
                         <span id="txt-task-sub">📢 Підписка на Telegram-канали</span>
-                        <span class="badge-status badge-sub" id="txt-badge-sub">HOT 🔥</span>
+                        <span class="badge-status badge-price" id="txt-price-sub">0.0018 USDT / підп.</span>
                     </div>
                 </div>
 
@@ -522,12 +561,25 @@
         let selectedTaskType = 'story_view';
         let selectedPackageSize = 10;
         let selectedPackageCost = 0.0015;
+        let selectedCampaignCategory = 'all';
+        let cachedCampaignsData = null;
 
         const translations = {
             uk: {
                 nav_campaigns: "Прогрес завдань",
                 campaigns_desc: "Тут відображається статус ваших активних завдань та звіти користувачів.",
                 no_campaigns: "У вас немає активних кампаній",
+                no_campaigns_in_cat: "У цій категорії немає активних кампаній",
+                cat_all: "Усі",
+                cat_reaction: "👍 Реакції",
+                cat_story_view: "🔥 Story",
+                cat_referral: "👥 Реферали",
+                cat_telegram_subscription: "📢 Підписки",
+                unit_short_action: "дія",
+                unit_short_view: "пер.",
+                unit_short_ref: "реф.",
+                unit_short_sub: "підп.",
+                missing_link: "Посилання не вказано",
                 balance_title: "Мій Баланс рекламодавця",
                 go_deposit: "⚡️ ПОПОЛНИТИ РАХУНОК",
                 create_title: "Створити нове завдання",
@@ -569,9 +621,6 @@
                 task_story: "🔥 Розкрутка Telegram Story",
                 task_ref: "👥 Реферали в боти/ігри",
                 task_sub: "📢 Підписка на Telegram-канали",
-                badge_active: "Активно",
-                badge_new: "Новинка",
-                badge_sub: "HOT 🔥",
                 select_pkg_label: "Оберіть пакет:",
                 unit_refs: "рефералів",
                 unit_subs: "підписок",
@@ -602,6 +651,17 @@
                 nav_campaigns: "Task Progress",
                 campaigns_desc: "Here is the status of your active tasks and user submissions.",
                 no_campaigns: "You don't have any active campaigns",
+                no_campaigns_in_cat: "No active campaigns in this category",
+                cat_all: "All",
+                cat_reaction: "👍 Reactions",
+                cat_story_view: "🔥 Story",
+                cat_referral: "👥 Referrals",
+                cat_telegram_subscription: "📢 Subscriptions",
+                unit_short_action: "act.",
+                unit_short_view: "view",
+                unit_short_ref: "ref.",
+                unit_short_sub: "sub.",
+                missing_link: "Link not provided",
                 balance_title: "My Advertiser Balance",
                 go_deposit: "⚡️ TOP UP BALANCE",
                 create_title: "Create New Task",
@@ -643,9 +703,6 @@
                 task_story: "🔥 Telegram Story Views",
                 task_ref: "👥 Referrals to bots/games",
                 task_sub: "📢 Telegram Channel Subscriptions",
-                badge_active: "Active",
-                badge_new: "New",
-                badge_sub: "HOT 🔥",
                 select_pkg_label: "Select package:",
                 unit_refs: "referrals",
                 unit_subs: "subscriptions",
@@ -676,6 +733,17 @@
                 nav_campaigns: "Прогресс заданий",
                 campaigns_desc: "Здесь отображается статус ваших активных заданий и отчеты пользователей.",
                 no_campaigns: "У вас нет активных кампаний",
+                no_campaigns_in_cat: "В этой категории нет активных кампаний",
+                cat_all: "Все",
+                cat_reaction: "👍 Реакции",
+                cat_story_view: "🔥 Story",
+                cat_referral: "👥 Рефералы",
+                cat_telegram_subscription: "📢 Подписки",
+                unit_short_action: "действ.",
+                unit_short_view: "прос.",
+                unit_short_ref: "реф.",
+                unit_short_sub: "подп.",
+                missing_link: "Ссылка не указана",
                 balance_title: "Мой Баланс рекламодателя",
                 go_deposit: "⚡️ ПОПОЛНИТЬ СЧЕТ",
                 create_title: "Создать новое задание",
@@ -697,7 +765,7 @@
                 label_hash: "Введите Адрес вашего кошелька или Хэш транзаккции:",
                 hash_placeholder: "Адрес кошелька (UQDw...) или Хэш",
                 btn_pay: "Подтвердить пополнение",
-                nav_lbl_camp: "Progress",
+                nav_lbl_camp: "Прогресс",
                 nav_lbl_create: "Заказ",
                 nav_lbl_dep: "Пополнение",
                 loading: "Загрузка...",
@@ -717,9 +785,6 @@
                 task_story: "🔥 Раскрутка Telegram Story",
                 task_ref: "👥 Рефералы в боты/игры",
                 task_sub: "📢 Подписка на Telegram-каналы",
-                badge_active: "Активно",
-                badge_new: "Новинка",
-                badge_sub: "HOT 🔥",
                 select_pkg_label: "Выберите пакет:",
                 unit_refs: "рефералов",
                 unit_subs: "подписок",
@@ -732,7 +797,7 @@
                 wallet_copied: "Адрес кошелька успешно скопирован!",
                 deposit_success: "🎉 Успешно! Баланс пополнен.",
                 deposit_error: "❌ Ошибка проверки: ",
-                alert_no_hash: "Пожалуйста, введите адрес вашего кошелька или хэш транзакции.",
+                alert_no_hash: "Пожалуйста, введите адрес вашего кошелька или хэш транзаккции.",
                 alert_no_url: "Пожалуйста, введите ссылку.",
                 cancel_success: "🎉 Кампания успешно отменена, средства возвращены на баланс!",
                 too_early_cancel: "⏳ Отменить задание можно только через 24 часа после создания.",
@@ -744,9 +809,17 @@
                 btn_reject: "✕ ОТКЛОНИТЬ",
                 default_reject_reason: "Не видно, что бот запущен",
                 auto_approve_note: "Автоматически засчитается через 48 ч",
-                info_box_html: "<b>💡 Как подтвердить пополнение:</b><br>1. Совершите перевод USDT на адрес выше.<br>2. Укажите сюда <b>Адрес вашего кошелька</b> или <b>Хэш транзакции</b>.<br>3. Нажмите кнопку подтверждения."
+                info_box_html: "<b>💡 Как подтвердить пополнение:</b><br>1. Совершите перевод USDT на адрес выше.<br>2. Укажите сюда <b>Адрес вашего кошелька</b> или <b>Хэш транзаккции</b>.<br>3. Нажмите кнопку подтверждения."
             }
         };
+
+        function updateTaskTypePricesUI() {
+            const t = translations[currentLang];
+            document.getElementById('txt-price-reaction').innerText = `0.001 USDT / ${t.unit_short_action}`;
+            document.getElementById('txt-price-story').innerText = `0.00015 USDT / ${t.unit_short_view}`;
+            document.getElementById('txt-price-referral').innerText = `0.004 USDT / ${t.unit_short_ref}`;
+            document.getElementById('txt-price-sub').innerText = `0.0018 USDT / ${t.unit_short_sub}`;
+        }
 
         function selectTaskType(type) {
             selectedTaskType = type;
@@ -832,6 +905,7 @@
             currentLang = langCode;
             localStorage.setItem('wgtask_user_lang', langCode);
             applyTranslations();
+            if (cachedCampaignsData) renderCampaignsSection(cachedCampaignsData);
             closeLangModal();
         }
 
@@ -868,10 +942,8 @@
             document.getElementById('txt-task-story').innerText = t.task_story;
             document.getElementById('txt-task-ref').innerText = t.task_ref;
             document.getElementById('txt-task-sub').innerText = t.task_sub;
-            document.getElementById('txt-badge-active-1').innerText = t.badge_active;
-            document.getElementById('txt-badge-story').innerText = t.badge_sub;
-            document.getElementById('txt-badge-new').innerText = t.badge_new;
-            document.getElementById('txt-badge-sub').innerText = t.badge_sub;
+            updateTaskTypePricesUI();
+
             document.getElementById('txt-select-pkg-label').innerText = t.select_pkg_label;
             document.getElementById('txt-label-wallet').innerText = t.label_amount;
             document.getElementById('txt-label-hash').innerText = t.label_hash;
@@ -1119,9 +1191,163 @@
             return `⏳ ${t.auto_approve_note} (${hoursLeft}г ${minsLeft}хв)`;
         }
 
+        function selectCampaignCategory(categoryKey) {
+            selectedCampaignCategory = categoryKey;
+            if (cachedCampaignsData) {
+                renderCampaignsSection(cachedCampaignsData);
+            }
+        }
+
+        function getSafeLinkText(link, fallbackText) {
+            if (!link || String(link).trim() === '' || String(link).toLowerCase() === 'undefined') {
+                return fallbackText;
+            }
+            return String(link);
+        }
+
+        function renderCampaignsSection(campaigns) {
+            const t = translations[currentLang];
+            const pillsDiv = document.getElementById('campaigns-category-pills');
+            const listDiv = document.getElementById('campaigns-list');
+
+            if (!campaigns || Object.keys(campaigns).length === 0) {
+                pillsDiv.innerHTML = '';
+                listDiv.innerHTML = `<p style="color: #4a555a; font-style: italic;">${t.no_campaigns}</p>`;
+                return;
+            }
+
+            const visibleCampaigns = [];
+            const counts = {
+                all: 0,
+                reaction: 0,
+                story_view: 0,
+                referral: 0,
+                telegram_subscription: 0
+            };
+            let pendingReferralsCount = 0;
+
+            Object.entries(campaigns).forEach(([campId, camp]) => {
+                const c = camp || {};
+                const current = parseInt(c.current_count ?? c.current_views ?? 0) || 0;
+                const target = parseInt(c.ordered_views ?? c.target_count ?? 20) || 20;
+                const campType = c.type || 'reaction';
+
+                const subsObj = (c.submissions && typeof c.submissions === 'object') ? c.submissions : {};
+                const pendingSubs = Object.entries(subsObj)
+                    .map(([subId, sub]) => ({ subId, ...(sub || {}) }))
+                    .filter(sub => sub.status === 'pending');
+
+                if (current >= target && pendingSubs.length === 0) return;
+
+                counts.all++;
+                if (counts[campType] !== undefined) {
+                    counts[campType]++;
+                }
+                if (campType === 'referral') {
+                    pendingReferralsCount += pendingSubs.length;
+                }
+
+                visibleCampaigns.push({
+                    campId,
+                    camp: c,
+                    current,
+                    target,
+                    campType,
+                    pendingSubs
+                });
+            });
+
+            if (visibleCampaigns.length === 0) {
+                pillsDiv.innerHTML = '';
+                listDiv.innerHTML = `<p style="color: #4a555a; font-style: italic;">${t.no_campaigns}</p>`;
+                return;
+            }
+
+            const categories = [
+                { key: 'all', label: t.cat_all },
+                { key: 'reaction', label: t.cat_reaction },
+                { key: 'story_view', label: t.cat_story_view },
+                { key: 'referral', label: t.cat_referral },
+                { key: 'telegram_subscription', label: t.cat_telegram_subscription }
+            ];
+
+            pillsDiv.innerHTML = categories.map(cat => {
+                const isActive = selectedCampaignCategory === cat.key;
+                const countVal = counts[cat.key] || 0;
+                const pendingBadge = (cat.key === 'referral' && pendingReferralsCount > 0)
+                    ? ` <span style="color:#ff9f1c;">(${pendingReferralsCount}⏳)</span>`
+                    : '';
+
+                return `
+                    <button class="category-pill ${isActive ? 'active' : ''}" onclick="selectCampaignCategory('${cat.key}')">
+                        ${cat.label} · ${countVal}${pendingBadge}
+                    </button>
+                `;
+            }).join('');
+
+            const filteredCampaigns = selectedCampaignCategory === 'all'
+                ? visibleCampaigns
+                : visibleCampaigns.filter(item => item.campType === selectedCampaignCategory);
+
+            if (filteredCampaigns.length === 0) {
+                listDiv.innerHTML = `<p style="color: #4a555a; font-style: italic;">${t.no_campaigns_in_cat}</p>`;
+                return;
+            }
+
+            listDiv.innerHTML = filteredCampaigns.map(({ campId, camp, current, target, campType, pendingSubs }) => {
+                const createdAt = camp.created_at ? new Date(camp.created_at).getTime() : 0;
+                const hoursPassed = (Date.now() - createdAt) / (1000 * 60 * 60);
+
+                const isCancellableType = (campType === 'reaction' || campType === 'story_view');
+                const canCancel = isCancellableType && hoursPassed >= 24;
+                const safeLink = getSafeLinkText(camp.link, t.missing_link);
+
+                let submissionsHtml = '';
+                if (pendingSubs.length > 0) {
+                    const itemsHtml = pendingSubs.map(sub => {
+                        const safeSubId = String(sub.id || sub.subId);
+                        const safeExecutorId = String(sub.userId || '');
+                        const safeUrl = sub.screenshotUrl ? String(sub.screenshotUrl) : '';
+                        const timerText = formatRemainingTime(sub);
+
+                        return `
+                            <div class="submission-card">
+                                <div class="submission-meta">👤 ${t.executor_label} <b>${safeExecutorId}</b></div>
+                                <div class="submission-timer">${timerText}</div>
+                                ${safeUrl ? `<div><a class="screenshot-link" href="${safeUrl}" target="_blank">🖼️ ${t.view_screenshot}</a></div>` : ''}
+                                <div class="mod-actions">
+                                    <button class="btn-approve" onclick="moderateSubmission('${campId}', '${safeSubId}', 'approve')">${t.btn_approve}</button>
+                                    <button class="btn-reject" onclick="moderateSubmission('${campId}', '${safeSubId}', 'reject')">${t.btn_reject}</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    submissionsHtml = `<div class="submissions-box">${itemsHtml}</div>`;
+                }
+
+                return `
+                    <div class="campaign-item">
+                        <div style="font-size:12px; color:var(--neon-aqua); word-break:break-all;">🔗 ${safeLink}</div>
+                        <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:6px; align-items:center;">
+                            <span>${t.lbl_type} <b>${campType}</b></span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>${t.lbl_prog} <b style="color:#ff9f1c">${current} / ${target}</b></span>
+                                ${isCancellableType ? `
+                                    <button ${canCancel ? `onclick="cancelCampaign('${campId}')"` : 'disabled'} style="padding: 2px 6px; font-size: 9px; font-weight: bold; border-radius: 4px; background: ${canCancel ? 'rgba(255,68,68,0.2)' : '#1a2226'}; color: ${canCancel ? '#ff4444' : '#4a555a'}; border: 1px solid ${canCancel ? '#ff4444' : '#2a353a'}; cursor: ${canCancel ? 'pointer' : 'not-allowed'}; line-height: 1.2;">
+                                        ${canCancel ? '❌ Скасувати' : '⏳ 24г'}
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                        ${submissionsHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
         async function fetchAdvertiserData() {
             if (!window.Telegram.WebApp.initData) return;
-            const t = translations[currentLang];
 
             try {
                 const response = await fetch('/api/user', {
@@ -1137,81 +1363,8 @@
                     balance = data.advertiser.balance || 0;
                     document.getElementById('adv-balance').innerText = balance.toFixed(4);
 
-                    const listDiv = document.getElementById('campaigns-list');
-                    const campaigns = data.advertiser.my_campaigns;
-                    
-                    if (campaigns && Object.keys(campaigns).length > 0) {
-                        listDiv.innerHTML = "";
-                        let activeCount = 0;
-
-                        Object.entries(campaigns).forEach(([campId, camp]) => {
-                            let current = parseInt(camp.current_count ?? camp.current_views ?? 0) || 0;
-                            let target = parseInt(camp.ordered_views ?? camp.target_count ?? 20) || 20;
-
-                            const subsObj = (camp.submissions && typeof camp.submissions === 'object') ? camp.submissions : {};
-                            const pendingSubs = Object.entries(subsObj)
-                                .map(([subId, sub]) => ({ subId, ...(sub || {}) }))
-                                .filter(sub => sub.status === 'pending');
-
-                            if (current >= target && pendingSubs.length === 0) return;
-                            
-                            activeCount++;
-
-                            let createdAt = camp.created_at ? new Date(camp.created_at).getTime() : 0;
-                            let hoursPassed = (Date.now() - createdAt) / (1000 * 60 * 60);
-                            
-                            let isCancellableType = (camp.type === 'reaction' || camp.type === 'story_view');
-                            let canCancel = isCancellableType && hoursPassed >= 24;
-
-                            let submissionsHtml = '';
-                            if (pendingSubs.length > 0) {
-                                const itemsHtml = pendingSubs.map(sub => {
-                                    const safeSubId = String(sub.id || sub.subId);
-                                    const safeExecutorId = String(sub.userId || '');
-                                    const safeUrl = sub.screenshotUrl ? String(sub.screenshotUrl) : '';
-                                    const timerText = formatRemainingTime(sub);
-
-                                    return `
-                                        <div class="submission-card">
-                                            <div class="submission-meta">👤 ${t.executor_label} <b>${safeExecutorId}</b></div>
-                                            <div class="submission-timer">${timerText}</div>
-                                            ${safeUrl ? `<div><a class="screenshot-link" href="${safeUrl}" target="_blank">🖼️ ${t.view_screenshot}</a></div>` : ''}
-                                            <div class="mod-actions">
-                                                <button class="btn-approve" onclick="moderateSubmission('${campId}', '${safeSubId}', 'approve')">${t.btn_approve}</button>
-                                                <button class="btn-reject" onclick="moderateSubmission('${campId}', '${safeSubId}', 'reject')">${t.btn_reject}</button>
-                                            </div>
-                                        </div>
-                                    `;
-                                }).join('');
-
-                                submissionsHtml = `<div class="submissions-box">${itemsHtml}</div>`;
-                            }
-
-                            listDiv.innerHTML += `
-                                <div class="campaign-item">
-                                    <div style="font-size:12px; color:var(--neon-aqua); word-break:break-all;">🔗 ${camp.link}</div>
-                                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:6px; align-items:center;">
-                                        <span>${t.lbl_type} <b>${camp.type || 'reaction'}</b></span>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <span>${t.lbl_prog} <b style="color:#ff9f1c">${current} / ${target}</b></span>
-                                            ${isCancellableType ? `
-                                                <button ${canCancel ? `onclick="cancelCampaign('${campId}')"` : 'disabled'} style="padding: 2px 6px; font-size: 9px; font-weight: bold; border-radius: 4px; background: ${canCancel ? 'rgba(255,68,68,0.2)' : '#1a2226'}; color: ${canCancel ? '#ff4444' : '#4a555a'}; border: 1px solid ${canCancel ? '#ff4444' : '#2a353a'}; cursor: ${canCancel ? 'pointer' : 'not-allowed'}; line-height: 1.2;">
-                                                    ${canCancel ? '❌ Скасувати' : '⏳ 24г'}
-                                                </button>
-                                            ` : ''}
-                                        </div>
-                                    </div>
-                                    ${submissionsHtml}
-                                </div>
-                            `;
-                        });
-
-                        if (activeCount === 0) {
-                            listDiv.innerHTML = `<p style="color: #4a555a; font-style: italic;">${t.no_campaigns}</p>`;
-                        }
-                    } else {
-                        document.getElementById('campaigns-list').innerHTML = `<p style="color: #4a555a; font-style: italic;">${t.no_campaigns}</p>`;
-                    }
+                    cachedCampaignsData = data.advertiser.my_campaigns || {};
+                    renderCampaignsSection(cachedCampaignsData);
                 }
             } catch (e) {
                 console.error("Error fetching cabinet data", e);
