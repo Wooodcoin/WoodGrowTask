@@ -161,8 +161,6 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Invalid action' });
         }
 
-    } tatchError => { // захист від одруків у catch
-        // Залишаємо стандартний блок обробки помилок
     } catch (e) {
         console.error("Error moderating task:", e);
         return res.status(500).json({ error: 'Database transaction error' });
