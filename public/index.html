@@ -249,6 +249,72 @@
             text-align: left;
         }
 
+        .submissions-box {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(0, 245, 212, 0.25);
+        }
+
+        .submission-card {
+            background: rgba(4, 24, 32, 0.85);
+            border: 1px solid rgba(0, 245, 212, 0.25);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 8px;
+        }
+
+        .submission-meta {
+            font-size: 12px;
+            color: #d1d5db;
+            margin-bottom: 6px;
+        }
+
+        .submission-timer {
+            font-size: 11px;
+            color: #ffbf69;
+            margin-bottom: 8px;
+        }
+
+        .screenshot-link {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--neon-aqua);
+            text-decoration: none;
+            margin-bottom: 8px;
+        }
+
+        .mod-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #00b09b, #00f5d4);
+            color: #041218;
+            border: none;
+            border-radius: 8px;
+            padding: 9px 10px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .btn-reject {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff6b6b;
+            border: 1px solid #ff4444;
+            border-radius: 8px;
+            padding: 9px 10px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
         .lang-select-btn {
             display: flex;
             align-items: center;
@@ -524,6 +590,12 @@
                 too_early_cancel: "⏳ Скасувати завдання можна лише через 24 години після створення.",
                 lbl_type: "Тип:",
                 lbl_prog: "Прогрес:",
+                executor_label: "Виконавець ID:",
+                view_screenshot: "Переглянути скріншот",
+                btn_approve: "✓ ПРИЙНЯТИ",
+                btn_reject: "✕ ВІДХИЛИТИ",
+                default_reject_reason: "Не видно, що бот запущений",
+                auto_approve_note: "Автоматично зарахується через 48 год",
                 info_box_html: "<b>💡 Як підтвердити поповнення:</b><br>1. Здійсніть переказ USDT на адресу вище.<br>2. Вкажіть сюди <b>Адресу вашого гаманця</b>, з якого зроблено переказ, або <b>Хеш транзакції</b> з історії.<br>3. Натисніть кнопку підтвердження нижче."
             },
             en: {
@@ -592,6 +664,12 @@
                 too_early_cancel: "⏳ You can cancel the task only 24 hours after creation.",
                 lbl_type: "Type:",
                 lbl_prog: "Progress:",
+                executor_label: "Executor ID:",
+                view_screenshot: "View screenshot",
+                btn_approve: "✓ APPROVE",
+                btn_reject: "✕ REJECT",
+                default_reject_reason: "Bot launch is not visible on the screenshot",
+                auto_approve_note: "Auto-approved in 48h",
                 info_box_html: "<b>💡 How to confirm deposit:</b><br>1. Transfer USDT to the address above.<br>2. Enter your <b>Wallet Address</b> (from which you transferred) or <b>Transaction Hash</b> here.<br>3. Click the confirmation button below."
             },
             ru: {
@@ -616,7 +694,7 @@
                 deposit_title: "Автоматическое пополнение",
                 deposit_desc: "Переведите USDT (TON) на указанный кошелек и подтвердите платеж с помощью вашего Кошелька или Хэша транзакции.",
                 label_amount: "Кошелек для пополнения (USDT TON):",
-                label_hash: "Введите Адрес вашего кошелька или Хэш транзакции:",
+                label_hash: "Введите Адрес вашего кошелька или Хэш транзаккции:",
                 hash_placeholder: "Адрес кошелька (UQDw...) или Хэш",
                 btn_pay: "Подтвердить пополнение",
                 nav_lbl_camp: "Progress",
@@ -659,7 +737,13 @@
                 cancel_success: "🎉 Кампания успешно отменена, средства возвращены на баланс!",
                 too_early_cancel: "⏳ Отменить задание можно только через 24 часа после создания.",
                 lbl_type: "Тип:",
-                lbl_prog: "Прогресс:",
+                lbl_prog: "Прогрес:",
+                executor_label: "Исполнитель ID:",
+                view_screenshot: "Посмотреть скриншот",
+                btn_approve: "✓ ПРИНЯТЬ",
+                btn_reject: "✕ ОТКЛОНИТЬ",
+                default_reject_reason: "Не видно, что бот запущен",
+                auto_approve_note: "Автоматически засчитается через 48 ч",
                 info_box_html: "<b>💡 Как подтвердить пополнение:</b><br>1. Совершите перевод USDT на адрес выше.<br>2. Укажите сюда <b>Адрес вашего кошелька</b> или <b>Хэш транзакции</b>.<br>3. Нажмите кнопку подтверждения."
             }
         };
@@ -821,14 +905,14 @@
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             document.getElementById('tab-' + tabName).classList.add('active');
-            element.classList.add('active');
+            if (element) element.classList.add('active');
             if (tabName === 'campaigns') fetchAdvertiserData();
             if (tabName === 'deposit') loadMasterWalletInfo();
         }
 
         function switchTabDirect(tabName) {
             const navEl = document.getElementById('nav-' + tabName);
-            if (navEl) switchTab(navEl, navEl);
+            switchTab(tabName, navEl);
         }
 
         async function loadMasterWalletInfo() {
@@ -983,6 +1067,58 @@
             }
         }
 
+        async function moderateSubmission(taskId, submissionId, action) {
+            const t = translations[currentLang];
+            let reason = '';
+
+            if (action === 'reject') {
+                const enteredReason = prompt(
+                    `Вкажіть причину відхилення (або залиште як є):`,
+                    t.default_reject_reason
+                );
+                if (enteredReason === null) return;
+                reason = enteredReason.trim() || t.default_reject_reason;
+            }
+
+            try {
+                const response = await fetch('/api/moderate-task', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        initData: window.Telegram.WebApp.initData,
+                        taskId: taskId,
+                        submissionId: submissionId,
+                        action: action,
+                        reason: reason
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    await fetchAdvertiserData();
+                } else {
+                    alert(data.error || t.err_server);
+                }
+            } catch (e) {
+                console.error("Error moderating submission:", e);
+                alert(t.err_server);
+            }
+        }
+
+        function formatRemainingTime(sub) {
+            const t = translations[currentLang];
+            const expiresAt = sub.expiresAt || (sub.submittedAt ? sub.submittedAt + (48 * 60 * 60 * 1000) : null);
+            if (!expiresAt) return `⏳ ${t.auto_approve_note}`;
+
+            const diffMs = expiresAt - Date.now();
+            if (diffMs <= 0) return `⏳ ${t.auto_approve_note}`;
+
+            const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
+            const minsLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            return `⏳ ${t.auto_approve_note} (${hoursLeft}г ${minsLeft}хв)`;
+        }
+
         async function fetchAdvertiserData() {
             if (!window.Telegram.WebApp.initData) return;
             const t = translations[currentLang];
@@ -1009,10 +1145,15 @@
                         let activeCount = 0;
 
                         Object.entries(campaigns).forEach(([campId, camp]) => {
-                            let current = parseInt(camp.current_views || camp.current_count || 0);
-                            let target = parseInt(camp.ordered_views || camp.target_count || 20);
-                            
-                            if (current >= target) return;
+                            let current = parseInt(camp.current_count ?? camp.current_views ?? 0) || 0;
+                            let target = parseInt(camp.ordered_views ?? camp.target_count ?? 20) || 20;
+
+                            const subsObj = (camp.submissions && typeof camp.submissions === 'object') ? camp.submissions : {};
+                            const pendingSubs = Object.entries(subsObj)
+                                .map(([subId, sub]) => ({ subId, ...(sub || {}) }))
+                                .filter(sub => sub.status === 'pending');
+
+                            if (current >= target && pendingSubs.length === 0) return;
                             
                             activeCount++;
 
@@ -1021,6 +1162,30 @@
                             
                             let isCancellableType = (camp.type === 'reaction' || camp.type === 'story_view');
                             let canCancel = isCancellableType && hoursPassed >= 24;
+
+                            let submissionsHtml = '';
+                            if (pendingSubs.length > 0) {
+                                const itemsHtml = pendingSubs.map(sub => {
+                                    const safeSubId = String(sub.id || sub.subId);
+                                    const safeExecutorId = String(sub.userId || '');
+                                    const safeUrl = sub.screenshotUrl ? String(sub.screenshotUrl) : '';
+                                    const timerText = formatRemainingTime(sub);
+
+                                    return `
+                                        <div class="submission-card">
+                                            <div class="submission-meta">👤 ${t.executor_label} <b>${safeExecutorId}</b></div>
+                                            <div class="submission-timer">${timerText}</div>
+                                            ${safeUrl ? `<div><a class="screenshot-link" href="${safeUrl}" target="_blank">🖼️ ${t.view_screenshot}</a></div>` : ''}
+                                            <div class="mod-actions">
+                                                <button class="btn-approve" onclick="moderateSubmission('${campId}', '${safeSubId}', 'approve')">${t.btn_approve}</button>
+                                                <button class="btn-reject" onclick="moderateSubmission('${campId}', '${safeSubId}', 'reject')">${t.btn_reject}</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('');
+
+                                submissionsHtml = `<div class="submissions-box">${itemsHtml}</div>`;
+                            }
 
                             listDiv.innerHTML += `
                                 <div class="campaign-item">
@@ -1036,6 +1201,7 @@
                                             ` : ''}
                                         </div>
                                     </div>
+                                    ${submissionsHtml}
                                 </div>
                             `;
                         });
